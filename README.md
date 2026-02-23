@@ -18,7 +18,26 @@ Tap and install:
 
 ```bash
 brew tap holynakamoto/mmtui
-brew install --HEAD mmtui
+brew install mmtui
+```
+
+Verify install:
+
+```bash
+mmtui --version
+```
+
+Upgrade:
+
+```bash
+brew update
+brew upgrade mmtui
+```
+
+Uninstall:
+
+```bash
+brew uninstall mmtui
 ```
 
 ### Cargo
