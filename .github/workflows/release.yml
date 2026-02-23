@@ -62,9 +62,9 @@ jobs:
         shell: bash
         run: |
           cd target/${{ matrix.target }}/release
-          BINARY_NAME=mlbt.exe
+          BINARY_NAME=mmtui.exe
           strip $BINARY_NAME
-          RELEASE_NAME=mlbt-${{ matrix.artifact_prefix }}
+          RELEASE_NAME=mmtui-${{ matrix.artifact_prefix }}
           tar czvf $RELEASE_NAME.tar.gz $BINARY_NAME
           certutil -hashfile $RELEASE_NAME.tar.gz sha256 | grep -E [A-Fa-f0-9]{64} > $RELEASE_NAME.sha256
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
@@ -74,9 +74,9 @@ jobs:
         shell: bash
         run: |
           cd target/${{ matrix.target }}/release
-          BINARY_NAME=mlbt
+          BINARY_NAME=mmtui
           strip $BINARY_NAME
-          RELEASE_NAME=mlbt-${{ matrix.artifact_prefix }}
+          RELEASE_NAME=mmtui-${{ matrix.artifact_prefix }}
           tar czvf $RELEASE_NAME.tar.gz $BINARY_NAME
           shasum -a 256 $RELEASE_NAME.tar.gz > $RELEASE_NAME.sha256
           echo "RELEASE_NAME=$RELEASE_NAME" >> $GITHUB_ENV
@@ -85,8 +85,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            target/${{ matrix.target }}/release/mlbt-${{ matrix.artifact_prefix }}.tar.gz
-            target/${{ matrix.target }}/release/mlbt-${{ matrix.artifact_prefix }}.sha256
+            target/${{ matrix.target }}/release/mmtui-${{ matrix.artifact_prefix }}.tar.gz
+            target/${{ matrix.target }}/release/mmtui-${{ matrix.artifact_prefix }}.sha256
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -115,5 +115,5 @@ jobs:
 
       - name: Build and Push Image
         run: |
-          docker build . --tag ghcr.io/mlb-rs/mlbt:$TAG
-          docker push ghcr.io/mlb-rs/mlbt:$TAG
+          docker build . --tag ghcr.io/holynakamoto/mmtui:$TAG
+          docker push ghcr.io/holynakamoto/mmtui:$TAG

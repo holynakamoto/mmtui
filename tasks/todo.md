@@ -3,13 +3,13 @@
 
 **Branch:** feature/march-madness
 **Worktree:** .worktrees/march-madness
-**Goal:** Fork mlbt into a full NCAA tournament TUI with animated ASCII banner
+**Goal:** Fork mmtui into a full NCAA tournament TUI with animated ASCII banner
 
 ---
 
 ## Batch 1 — Foundation (crates + domain types)
 
-- [ ] 1. Project rename: update root `Cargo.toml` (name, description, keywords), rename `mlb-api` → `ncaa-api` in `api/Cargo.toml`, update workspace member references
+- [ ] 1. Project rename: update root `Cargo.toml` (name, description, keywords), rename `ncaa-api` → `ncaa-api` in `api/Cargo.toml`, update workspace member references
 - [ ] 2. Create `ncaa-api` domain types in `api/src/lib.rs`: `Tournament`, `Region`, `Round`, `RoundKind`, `Game`, `GameStatus`, `Team`, `TeamSeed`, `GameDetail`
 - [ ] 3. Implement ESPN API client in `api/src/client.rs`: `fetch_tournament()`, `fetch_scoreboard()`, `fetch_game_detail()` using reqwest+serde
 
@@ -17,7 +17,7 @@
 
 - [ ] 4. Replace `src/state/messages.rs`: new `NetworkRequest` (LoadBracket, RefreshScores, LoadGameDetail) and `NetworkResponse` (BracketLoaded, BracketUpdated, GameDetailLoaded) variants
 - [ ] 5. Replace `src/state/app_state.rs`: `BracketState` (tournament, selected_round, selected_region, selected_game, scroll_offset), `AnimationState` (frame, tick, theme), updated `AppState`
-- [ ] 6. Update `src/app.rs`: new `MenuItem` enum (Bracket, Scoreboard, GameDetail), remove MLB-specific state
+- [ ] 6. Update `src/app.rs`: new `MenuItem` enum (Bracket, Scoreboard, GameDetail), remove NCAA-specific state
 
 ## Batch 3 — Network & Animation Infrastructure
 
@@ -39,13 +39,13 @@
 
 - [ ] 14. Create `src/components/scoreboard.rs`: live games list for current round, status indicators (InProgress/Final/Scheduled), replacing `schedule.rs`
 - [ ] 15. Create `src/components/game_detail.rs`: box score + play-by-play for selected game, replacing `gameday/` and `boxscore.rs`
-- [ ] 16. Update `src/keys.rs`: bracket navigation (←/→ rounds, ↑/↓ games, r=region, Enter=detail), remove MLB bindings
+- [ ] 16. Update `src/keys.rs`: bracket navigation (←/→ rounds, ↑/↓ games, r=region, Enter=detail), remove NCAA bindings
 
 ## Batch 7 — Layout, Draw & Integration
 
 - [ ] 17. Update `src/ui/layout.rs`: 3-panel layout (banner header, tab bar, content); dynamic content area for Bracket/Scoreboard/GameDetail
 - [ ] 18. Update `src/draw.rs`: dispatch to bracket/scoreboard/game_detail views; handle `is_final_four()` layout switch
-- [ ] 19. Remove MLB-only components: `src/components/game/`, `linescore.rs`, `date_selector.rs`, `stats.rs`, `standings.rs`; remove `src/ui/` MLB views
+- [ ] 19. Remove NCAA-only components: `src/components/game/`, `linescore.rs`, `date_selector.rs`, `stats.rs`, `standings.rs`; remove `src/ui/` NCAA views
 
 ## Batch 8 — Verification
 
