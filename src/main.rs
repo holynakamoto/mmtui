@@ -1,6 +1,5 @@
 mod app;
 mod components;
-mod config;
 mod draw;
 mod keys;
 mod state;
@@ -17,6 +16,7 @@ use std::io::Stdout;
 use std::sync::Arc;
 use std::{io, panic};
 use tokio::sync::{Mutex, mpsc};
+use tokio::time::Duration;
 use tui::{Terminal, backend::CrosstermBackend};
 
 #[tokio::main]
@@ -29,7 +29,6 @@ async fn main() -> anyhow::Result<()> {
     setup_panic_hook();
     setup_terminal();
 
-    // initialize logging
     tui_logger::init_logger(log::LevelFilter::Error)?;
     tui_logger::set_default_level(log::LevelFilter::Error);
 
@@ -39,26 +38,38 @@ async fn main() -> anyhow::Result<()> {
     let (network_req_tx, network_req_rx) = mpsc::channel::<NetworkRequest>(100);
     let (network_resp_tx, network_resp_rx) = mpsc::channel::<NetworkResponse>(100);
 
-    // input handler thread
+    // Input handler thread
     let input_handler = tokio::spawn(input_handler_task(ui_event_tx.clone()));
 
-    // network thread
+    // Network thread
     let network_worker = NetworkWorker::new(network_req_rx, network_resp_tx);
     let network_task = tokio::spawn(network_worker.run());
 
-    // periodic update thread
+    // Periodic score refresh thread (every 30s)
     let periodic_updater = PeriodicRefresher::new(network_req_tx.clone());
-    let periodic_task = tokio::spawn(periodic_updater.run(app.clone()));
+    let periodic_task = tokio::spawn(periodic_updater.run());
 
-    // send initial app started event
+    // Animation tick thread — 80ms ≈ 12.5 FPS
+    let anim_tx = ui_event_tx.clone();
+    let animation_task = tokio::spawn(async move {
+        let mut interval = tokio::time::interval(Duration::from_millis(80));
+        loop {
+            interval.tick().await;
+            if anim_tx.send(UiEvent::AnimationTick).await.is_err() {
+                break;
+            }
+        }
+    });
+
+    // Trigger bracket load on startup
     let _ = ui_event_tx.send(UiEvent::AppStarted).await;
 
-    // run the main UI loop
     main_ui_loop(terminal, app, ui_event_rx, network_req_tx, network_resp_rx).await;
 
     input_handler.abort();
     network_task.abort();
     periodic_task.abort();
+    animation_task.abort();
 
     Ok(())
 }
@@ -83,7 +94,8 @@ async fn main_ui_loop(
             }
 
             Some(response) = network_responses.recv() => {
-                let should_redraw = handle_network_response(response, &app, &network_requests, &mut loading).await;
+                let should_redraw =
+                    handle_network_response(response, &app, &mut loading).await;
                 if should_redraw {
                     let mut app_guard = app.lock().await;
                     draw::draw(&mut terminal, &mut app_guard, loading);
@@ -100,67 +112,50 @@ async fn handle_ui_event(
 ) -> bool {
     match ui_event {
         UiEvent::AppStarted => {
-            let date = {
-                let guard = app.lock().await;
-                guard.state.schedule.date_selector.date
-            };
-            let _ = network_requests
-                .send(NetworkRequest::Schedule { date })
-                .await;
-            true // Redraw immediately to show loading state
+            let _ = network_requests.send(NetworkRequest::LoadBracket).await;
+            true
         }
         UiEvent::KeyPressed(key_event) => {
             keys::handle_key_bindings(key_event, app, network_requests).await;
-            true // Redraw after key handling
+            true
         }
-        UiEvent::Resize => true, // Redraw on resize
+        UiEvent::Resize => true,
+        UiEvent::AnimationTick => {
+            let mut guard = app.lock().await;
+            guard.advance_animation(crate::components::banner::FRAME_COUNT);
+            true
+        }
     }
 }
 
 async fn handle_network_response(
     response: NetworkResponse,
     app: &Arc<Mutex<App>>,
-    network_requests: &mpsc::Sender<NetworkRequest>,
     loading: &mut LoadingState,
 ) -> bool {
     match response {
         NetworkResponse::LoadingStateChanged { loading_state } => {
             *loading = loading_state;
-            // Always redraw for loading changes
             return true;
         }
-        NetworkResponse::ScheduleLoaded { schedule } => {
-            let game_id_to_load = {
-                let mut guard = app.lock().await;
-                guard.update_schedule(&schedule)
-            };
-
-            if let Some(game_id) = game_id_to_load {
-                let _ = network_requests
-                    .send(NetworkRequest::GameData { game_id })
-                    .await;
-            }
-        }
-        NetworkResponse::GameDataLoaded {
-            game,
-            win_probability,
-        } => {
+        NetworkResponse::BracketLoaded { tournament } => {
             let mut guard = app.lock().await;
-            guard.update_live_data(&game, &win_probability);
+            guard.on_bracket_loaded(tournament);
         }
-        NetworkResponse::StandingsLoaded { standings } => {
+        NetworkResponse::BracketUpdated { games } => {
             let mut guard = app.lock().await;
-            guard.state.standings.update(&standings);
+            guard.on_scores_updated(games);
         }
-        NetworkResponse::StatsLoaded { stats } => {
+        NetworkResponse::GameDetailLoaded { detail } => {
             let mut guard = app.lock().await;
-            guard.state.stats.update(&stats);
+            guard.on_game_detail_loaded(detail);
         }
         NetworkResponse::Error { message } => {
             error!("Network error: {message}");
+            let mut guard = app.lock().await;
+            guard.on_error(message);
         }
     }
-    // Only redraw if not loading
     !loading.is_loading
 }
 
@@ -170,14 +165,13 @@ async fn input_handler_task(ui_events: mpsc::Sender<UiEvent>) {
             let ui_event = match event {
                 Event::Key(key_event) => Some(UiEvent::KeyPressed(key_event)),
                 Event::Resize(_, _) => Some(UiEvent::Resize),
-                Event::Mouse(_) => None, // Ignore mouse events for now
                 _ => None,
             };
 
             if let Some(ui_event) = ui_event
                 && ui_events.send(ui_event).await.is_err()
             {
-                break; // Channel closed, exit task
+                break;
             }
         }
     }
@@ -185,22 +179,18 @@ async fn input_handler_task(ui_events: mpsc::Sender<UiEvent>) {
 
 fn setup_terminal() {
     let mut stdout = io::stdout();
-
     execute!(stdout, cursor::Hide).unwrap();
     execute!(stdout, terminal::EnterAlternateScreen).unwrap();
     execute!(stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
-
     terminal::enable_raw_mode().unwrap();
 }
 
-fn cleanup_terminal() {
+pub fn cleanup_terminal() {
     let mut stdout = io::stdout();
-
     execute!(stdout, cursor::MoveTo(0, 0)).unwrap();
     execute!(stdout, terminal::Clear(terminal::ClearType::All)).unwrap();
     execute!(stdout, terminal::LeaveAlternateScreen).unwrap();
     execute!(stdout, cursor::Show).unwrap();
-
     terminal::disable_raw_mode().unwrap();
 }
 

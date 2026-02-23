@@ -1,69 +1,56 @@
 use tui::backend::Backend;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
+use tui::layout::{Alignment, Constraint, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::Line;
 use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph, Tabs};
 use tui::{Frame, Terminal};
 
-use crate::app::{App, DebugState, MenuItem};
-use crate::components::debug::DebugInfo;
+use crate::app::{App, MenuItem};
+use crate::components::banner::AnimatedBanner;
+use crate::components::banner_frames::BannerTheme;
+use crate::components::bracket::FinalFourView;
 use crate::state::network::{ERROR_CHAR, LoadingState};
-use crate::ui::boxscore::TeamBatterBoxscoreWidget;
-use crate::ui::date_selector::DateSelectorWidget;
-use crate::ui::gameday::gameday_widget::GamedayWidget;
-use crate::ui::gameday::win_probability::WinProbabilityWidget;
-use crate::ui::help::{DOCS, HelpWidget};
 use crate::ui::layout::LayoutAreas;
-use crate::ui::linescore::LineScoreWidget;
-use crate::ui::logs::LogWidget;
-use crate::ui::schedule::ScheduleWidget;
-use crate::ui::standings::StandingsWidget;
-use crate::ui::stats::{STATS_OPTIONS_WIDTH, StatsWidget};
+use ncaa_api::{Game, GameStatus, Round, RoundKind, TeamSeed};
 
-static TABS: &[&str; 4] = &["Scoreboard", "Gameday", "Stats", "Standings"];
+static TABS: &[&str; 3] = &["Bracket", "Scoreboard", "Game Detail"];
 
-pub fn draw<B>(terminal: &mut Terminal<B>, app: &mut App, is_loading: LoadingState)
+pub fn draw<B>(terminal: &mut Terminal<B>, app: &mut App, loading: LoadingState)
 where
     B: Backend,
 {
     let current_size = terminal.size().unwrap_or_default();
-    let mut main_layout = LayoutAreas::new(current_size);
-
     if current_size.width <= 10 || current_size.height <= 10 {
         return;
     }
 
+    let mut layout = LayoutAreas::new(current_size);
+
     terminal
         .draw(|f| {
-            main_layout.update(f.area(), app.settings.full_screen);
+            if app.state.show_intro {
+                draw_intro(f, f.area(), app);
+                return;
+            }
+
+            layout.update(f.area(), app.settings.full_screen);
 
             if !app.settings.full_screen {
-                draw_tabs(f, &main_layout.top_bar, app);
+                draw_tabs(f, layout.tab_bar, app);
             }
 
             match app.state.active_tab {
-                MenuItem::Scoreboard => draw_scoreboard(f, main_layout.main, app),
-                MenuItem::DatePicker => {
-                    match app.state.previous_tab {
-                        MenuItem::Scoreboard => draw_scoreboard(f, main_layout.main, app),
-                        MenuItem::Standings => draw_standings(f, main_layout.main, app),
-                        MenuItem::Stats => draw_stats(f, main_layout.main, app),
-                        _ => (),
-                    }
-                    draw_date_picker(f, main_layout.main, app);
-                }
-                MenuItem::Gameday => draw_gameday(f, main_layout.main, app),
-                MenuItem::Stats => draw_stats(f, main_layout.main, app),
-                MenuItem::Standings => draw_standings(f, main_layout.main, app),
-                MenuItem::Help => draw_help(f, f.area(), app.state.show_logs),
-            }
-            if app.state.debug_state == DebugState::On {
-                let mut dbi = DebugInfo::new();
-                dbi.gather_info(f, app);
-                dbi.render(f, main_layout.main, app.state.show_logs);
+                MenuItem::Bracket => draw_bracket(f, layout.main, app),
+                MenuItem::Scoreboard => draw_scoreboard(f, layout.main, app),
+                MenuItem::GameDetail => draw_game_detail(f, layout.main, app),
+                MenuItem::Help => draw_placeholder(
+                    f,
+                    layout.main,
+                    "Help: q=quit  1=Bracket  2=Scoreboard  3=GameDetail  ←/→=round  ↑/↓=game  Enter=select  r=region",
+                ),
             }
 
-            draw_loading_spinner(f, f.area(), app, is_loading);
+            draw_loading_spinner(f, f.area(), app, loading);
         })
         .unwrap();
 }
@@ -75,197 +62,580 @@ pub fn default_border<'a>(color: Color) -> Block<'a> {
         .border_style(Style::default().fg(color))
 }
 
-fn draw_border(f: &mut Frame, rect: Rect, color: Color) {
-    let block = default_border(color);
-    f.render_widget(block, rect);
+fn draw_intro(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::DarkGray).title(" March Madness ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    let [_top_pad, banner_area, prompt_area, _bottom_pad] = Layout::vertical([
+        Constraint::Fill(1),
+        Constraint::Length(8),
+        Constraint::Length(1),
+        Constraint::Fill(1),
+    ])
+    .areas(inner);
+    f.render_widget(
+        AnimatedBanner {
+            frame: app.state.animation.frame,
+            tick: app.state.animation.tick,
+            theme: BannerTheme::Dark,
+            view_round: app.state.bracket.view_round,
+            current_round: app.state.bracket.current_round,
+        },
+        banner_area,
+    );
+    f.render_widget(
+        Paragraph::new("Press Enter to view bracket")
+            .style(Style::default().fg(Color::Gray))
+            .alignment(Alignment::Center),
+        prompt_area,
+    );
 }
 
-fn draw_loading_spinner(f: &mut Frame, area: Rect, app: &App, loading: LoadingState) {
-    if !loading.is_loading && loading.spinner_char != ERROR_CHAR {
-        return;
-    }
-
-    let style = match loading.spinner_char {
-        ERROR_CHAR => Style::default().fg(Color::Red),
-        _ => Style::default().fg(Color::White),
-    };
-
-    let spinner = Paragraph::new(loading.spinner_char.to_string())
-        .alignment(Alignment::Right)
-        .style(style);
-
-    let area = if app.settings.full_screen {
-        // render in the bottom right
-        Rect::new(
-            area.width.saturating_sub(3),
-            area.height.saturating_sub(2),
-            1,
-            1,
-        )
-    } else {
-        // render in the top right
-        Rect::new(area.width.saturating_sub(11), 1, 1, 1)
-    };
-    f.render_widget(spinner, area);
-}
-
-fn draw_tabs(f: &mut Frame, top_bar: &[Rect], app: &App) {
+fn draw_tabs(f: &mut Frame, tab_bar: [Rect; 2], app: &App) {
     let style = Style::default().fg(Color::White);
-    let border_style = Style::default();
     let border_type = BorderType::Rounded;
 
-    let titles: Vec<Line> = TABS.iter().map(|t| Line::from(*t)).collect();
+    let tab_index = match app.state.active_tab {
+        MenuItem::Bracket => 0,
+        MenuItem::Scoreboard => 1,
+        MenuItem::GameDetail => 2,
+        MenuItem::Help => 0,
+    };
 
+    let titles: Vec<Line> = TABS.iter().map(|t| Line::from(*t)).collect();
     let tabs = Tabs::new(titles)
         .block(
             Block::default()
                 .borders(Borders::LEFT | Borders::BOTTOM | Borders::TOP)
-                .border_type(border_type)
-                .border_style(border_style),
+                .border_type(border_type),
         )
-        .highlight_style(
-            // underline the active tab
-            Style::default().add_modifier(Modifier::UNDERLINED),
-        )
-        .select(app.state.active_tab as usize)
+        .highlight_style(Style::default().add_modifier(Modifier::UNDERLINED))
+        .select(tab_index)
         .style(style);
-    f.render_widget(tabs, top_bar[0]);
+    f.render_widget(tabs, tab_bar[0]);
 
     let help = Paragraph::new("Help: ? ")
         .alignment(Alignment::Right)
         .block(
             Block::default()
                 .borders(Borders::RIGHT | Borders::BOTTOM | Borders::TOP)
-                .border_type(border_type)
-                .border_style(border_style),
+                .border_type(border_type),
         )
         .style(style);
-    f.render_widget(help, top_bar[1]);
+    f.render_widget(help, tab_bar[1]);
 }
 
-fn draw_scoreboard(f: &mut Frame, rect: Rect, app: &mut App) {
-    // TODO calculate width based on table sizes
-    let direction = match f.area().width {
-        w if w < 125 => Direction::Vertical,
-        _ => Direction::Horizontal,
-    };
-    let [scoreboard, boxscore] = Layout::default()
-        .direction(direction)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-        .areas(rect);
+fn draw_bracket(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::White).title(" Bracket ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
 
-    // display scores on left side
-    f.render_stateful_widget(
-        ScheduleWidget {
-            tz_abbreviation: app.settings.timezone_abbreviation.clone(),
-        },
-        scoreboard,
-        &mut app.state.schedule,
-    );
-    if app.state.schedule.show_win_probability {
-        draw_win_probability(f, scoreboard, app);
-    }
-
-    // display line score and box score on right
-    draw_border(f, boxscore, Color::White);
-    draw_linescore_boxscore(f, boxscore, app);
-}
-
-fn draw_linescore_boxscore(f: &mut Frame, rect: Rect, app: &mut App) {
-    let chunks = LayoutAreas::for_boxscore(rect);
-
-    f.render_widget(
-        LineScoreWidget {
-            active: app.state.box_score.active_team,
-            linescore: &app.state.gameday.game.linescore,
-        },
-        chunks[0],
-    );
-    f.render_widget(
-        TeamBatterBoxscoreWidget {
-            active: app.state.box_score.active_team,
-            state: &mut app.state.box_score,
-        },
-        chunks[1],
-    );
-}
-
-fn draw_date_picker(f: &mut Frame, rect: Rect, app: &mut App) {
-    let chunk = LayoutAreas::create_date_picker(rect);
-    f.render_stateful_widget(DateSelectorWidget {}, chunk, &mut app.state.date_input);
-
-    // display cursor
-    f.set_cursor_position((
-        chunk.x + app.state.date_input.text.len() as u16 + 1, // +1 for border
-        chunk.y + 2,                                          // +2 for border and instructions
-    ))
-}
-
-fn draw_gameday(f: &mut Frame, rect: Rect, app: &mut App) {
-    f.render_widget(
-        GamedayWidget {
-            active: app.state.box_score.active_team,
-            state: &app.state.gameday,
-            boxscore_state: &mut app.state.box_score,
-        },
-        rect,
-    );
-}
-
-fn draw_stats(f: &mut Frame, rect: Rect, app: &mut App) {
-    // TODO by taking into account the width of the options pane I'm basically removing that amount
-    // of space for columns. If I didn't, you could select columns that would be covered by the
-    // options pane, but then when its disabled would become visible.
-    let width = match app.state.stats.show_options {
-        true => rect.width - STATS_OPTIONS_WIDTH,
-        false => rect.width,
-    };
-    app.state.stats.trim_columns(width);
-    f.render_stateful_widget(
-        StatsWidget {
-            show_options: app.state.stats.show_options,
-        },
-        rect,
-        &mut app.state.stats,
-    );
-}
-
-fn draw_standings(f: &mut Frame, rect: Rect, app: &mut App) {
-    f.render_stateful_widget(StandingsWidget {}, rect, &mut app.state.standings);
-}
-
-fn draw_win_probability(f: &mut Frame, rect: Rect, app: &mut App) {
-    // only render if it doesn't overlap the schedule
-    let minimum_size =
-        WinProbabilityWidget::get_min_table_height() + app.state.schedule.schedule.len() + 2; // +2 for borders 
-    if rect.height > minimum_size as u16 {
+    let Some(tournament) = app.state.bracket.tournament.as_ref() else {
+        let msg = if let Some(err) = app.state.last_error.as_deref() {
+            format!("Bracket load failed:\n{err}")
+        } else {
+            "Loading bracket data...".to_string()
+        };
         f.render_widget(
-            WinProbabilityWidget {
-                game: &app.state.gameday.game,
-                selected_at_bat: app.state.gameday.selected_at_bat(),
-                active_tab: MenuItem::Scoreboard,
-            },
-            rect,
+            Paragraph::new(msg)
+                .style(Style::default().fg(Color::DarkGray))
+                .alignment(Alignment::Center),
+            inner,
         );
+        return;
+    };
+
+    let [header, key_legend, content] =
+        Layout::vertical([Constraint::Length(1), Constraint::Length(1), Constraint::Fill(1)]).areas(inner);
+
+    let region_label = if app.state.bracket.view_round.is_final_four() {
+        "National".to_string()
+    } else {
+        tournament
+            .regions
+            .iter()
+            .filter(|r| r.name != "National")
+            .nth(app.state.bracket.selected_region)
+            .map(|r| r.name.clone())
+            .unwrap_or_else(|| "Region".to_string())
+    };
+
+    let header_text = format!(
+        "{} {} | {} | {}",
+        tournament.name,
+        tournament.year,
+        app.state.bracket.view_round.label(),
+        region_label
+    );
+    f.render_widget(Paragraph::new(header_text), header);
+    f.render_widget(
+        Paragraph::new("Keys: h/l=round  j/k=move  r=region  Enter=details  ?=help  q=quit")
+            .style(Style::default().fg(Color::DarkGray)),
+        key_legend,
+    );
+
+    if app.state.bracket.view_round == RoundKind::Championship {
+        draw_championship_view(f, content, tournament);
+    } else if app.state.bracket.view_round.is_final_four() {
+        draw_final_four_view(f, content, tournament, app);
+    } else {
+        draw_all_regions_view(f, content, tournament, app);
     }
 }
 
-fn draw_help(f: &mut Frame, rect: Rect, show_logs: bool) {
-    f.render_widget(Clear, rect);
+fn draw_all_regions_view(f: &mut Frame, area: Rect, tournament: &ncaa_api::Tournament, app: &App) {
+    let regions: Vec<_> = tournament
+        .regions
+        .iter()
+        .filter(|r| r.name != "National")
+        .collect();
 
-    if show_logs {
-        draw_border(f, rect, Color::White);
-        f.render_widget(LogWidget {}, rect);
+    if regions.is_empty() {
+        f.render_widget(
+            Paragraph::new("No region data found")
+                .style(Style::default().fg(Color::DarkGray))
+                .alignment(Alignment::Center),
+            area,
+        );
         return;
     }
 
-    // if the terminal is too small display a red border
-    let mut color = Color::White;
-    let min_height = DOCS.len() as u16 + 3; // 3 for table header, top border, bottom border
-    if rect.height < min_height || rect.width < 35 {
-        color = Color::Red;
-    }
-    draw_border(f, rect, color);
+    let [top_row, middle_gap, bottom_row] = Layout::vertical([
+        Constraint::Fill(1),
+        Constraint::Length(1),
+        Constraint::Fill(1),
+    ])
+    .areas(area);
+    let [top_left, _top_mid, top_right] = Layout::horizontal([
+        Constraint::Fill(1),
+        Constraint::Length(3),
+        Constraint::Fill(1),
+    ])
+    .areas(top_row);
+    let [bottom_left, _bottom_mid, bottom_right] = Layout::horizontal([
+        Constraint::Fill(1),
+        Constraint::Length(3),
+        Constraint::Fill(1),
+    ])
+    .areas(bottom_row);
 
-    f.render_widget(HelpWidget {}, rect);
+    let panes: [Rect; 4] = [top_left, top_right, bottom_left, bottom_right];
+    let connector_center = Rect::new(
+        area.x + area.width.saturating_sub(3) / 2,
+        middle_gap.y,
+        3,
+        1,
+    );
+
+    for (idx, pane) in panes.into_iter().enumerate() {
+        if let Some(region) = regions.get(idx) {
+            let pane_block = default_border(if idx == app.state.bracket.selected_region {
+                Color::Yellow
+            } else {
+                Color::DarkGray
+            })
+            .title(format!(" {} ", region.name));
+            let pane_inner = pane_block.inner(pane);
+            f.render_widget(pane_block, pane);
+
+            draw_round_compact(
+                f,
+                pane_inner,
+                round_games(region.rounds.as_slice(), app.state.bracket.view_round).unwrap_or(&[]),
+                idx == app.state.bracket.selected_region,
+                app.state.bracket.selected_game,
+            );
+        }
+    }
+
+    if app.state.bracket.view_round == RoundKind::Elite8 {
+        draw_region_champion_connectors(f, panes, connector_center);
+    }
+}
+
+fn draw_round_compact(
+    f: &mut Frame,
+    area: Rect,
+    games: &[Game],
+    selected_region: bool,
+    selected_game: usize,
+) {
+    if area.height == 0 || area.width == 0 {
+        return;
+    }
+    if games.is_empty() {
+        f.render_widget(
+            Paragraph::new("No games")
+                .style(Style::default().fg(Color::DarkGray))
+                .alignment(Alignment::Center),
+            area,
+        );
+        return;
+    }
+
+    let entries = build_round_entries(games);
+    let rows = area.height as usize;
+    let cols = entries.len().max(1).div_ceil(rows.max(1));
+    let col_width = (area.width as usize / cols.max(1)).max(1);
+    let use_abbrev = col_width < 26;
+
+    f.render_widget(Clear, area);
+
+    for (idx, mut entry) in entries.into_iter().enumerate() {
+        let row = idx % rows.max(1);
+        let col = idx / rows.max(1);
+        if col >= cols {
+            break;
+        }
+        let game_idx = idx / 2;
+        let marker = if selected_region && game_idx == selected_game && idx % 2 == 0 {
+            '>'
+        } else {
+            ' '
+        };
+        if use_abbrev && entry.chars().count() > 5 {
+            entry = abbreviate_entry(&entry);
+        }
+        let clipped: String = entry.chars().take(col_width.saturating_sub(2)).collect();
+        let line = format!("{marker} {clipped}");
+        let x = area.x + (col * col_width) as u16;
+        let y = area.y + row as u16;
+        f.render_widget(Paragraph::new(line), Rect::new(x, y, col_width as u16, 1));
+    }
+}
+
+fn build_round_entries(games: &[Game]) -> Vec<String> {
+    let mut entries = Vec::with_capacity(games.len() * 2);
+    for g in games {
+        let status = match g.status {
+            GameStatus::Scheduled => "SCH",
+            GameStatus::InProgress => "LIVE",
+            GameStatus::Final => "FNL",
+            GameStatus::Postponed => "PPD",
+        };
+        entries.push(format!(
+            "{} {status}",
+            compact_team(g.top.seed, &g.top, g.score.map(|(s, _)| s), false)
+        ));
+        entries.push(format!(
+            "{} {status}",
+            compact_team(g.bottom.seed, &g.bottom, g.score.map(|(_, s)| s), false)
+        ));
+    }
+    entries
+}
+
+fn compact_team(seed: u8, team_seed: &TeamSeed, score: Option<u16>, use_abbrev: bool) -> String {
+    let name = team_seed
+        .team
+        .as_ref()
+        .map(|t| {
+            if use_abbrev {
+                t.abbrev.clone()
+            } else {
+                t.short_name.clone()
+            }
+        })
+        .or_else(|| team_seed.placeholder.clone())
+        .unwrap_or_else(|| "TBD".to_string());
+    let score = score
+        .map(|s| format!("{s:>2}"))
+        .unwrap_or_else(|| "--".to_string());
+    let seed = if seed > 0 {
+        format!("{seed:>2}")
+    } else {
+        "--".to_string()
+    };
+    format!("{seed} {} {score}", truncate_name(&name, if use_abbrev { 5 } else { 10 }))
+}
+
+fn abbreviate_entry(entry: &str) -> String {
+    let mut out = String::new();
+    for token in entry.split_whitespace().take(3) {
+        if !out.is_empty() {
+            out.push(' ');
+        }
+        out.push_str(token);
+    }
+    out
+}
+
+fn truncate_name(name: &str, max: usize) -> String {
+    let mut s: String = name.chars().take(max).collect();
+    while s.chars().count() < max {
+        s.push(' ');
+    }
+    s
+}
+
+fn draw_region_champion_connectors(f: &mut Frame, panes: [Rect; 4], center: Rect) {
+    let style = Style::default().fg(Color::DarkGray);
+    let target_x = center.x + center.width / 2;
+    let target_y = center.y;
+    draw_text_cell(f, target_x, target_y, "★", style);
+
+    // Bottom two regions feed upward toward the center/finals marker.
+    for pane in [panes[2], panes[3]] {
+        let start_x = pane.x + pane.width / 2;
+        let start_y = if pane.y < target_y {
+            pane.y + pane.height.saturating_sub(1)
+        } else {
+            pane.y
+        };
+        draw_diagonal(f, start_x, start_y, target_x, target_y, style);
+    }
+}
+
+fn draw_diagonal(f: &mut Frame, mut x: u16, mut y: u16, tx: u16, ty: u16, style: Style) {
+    while y != ty || x != tx {
+        if y < ty {
+            y += 1;
+        } else if y > ty {
+            y -= 1;
+        }
+
+        if x < tx {
+            x += 1;
+        } else if x > tx {
+            x -= 1;
+        }
+
+        let ch = if x < tx {
+            '╲'
+        } else if x > tx {
+            '╱'
+        } else {
+            '│'
+        };
+        draw_text_cell(f, x, y, &ch.to_string(), style);
+    }
+}
+
+fn draw_text_cell(f: &mut Frame, x: u16, y: u16, text: &str, style: Style) {
+    let area = f.area();
+    if x >= area.x + area.width || y >= area.y + area.height {
+        return;
+    }
+    f.render_widget(Paragraph::new(text).style(style), Rect::new(x, y, 1, 1));
+}
+
+fn draw_final_four_view(f: &mut Frame, area: Rect, tournament: &ncaa_api::Tournament, app: &App) {
+    let national = tournament.regions.iter().find(|r| r.name == "National");
+    let semifinals = national.and_then(|r| round_games(r.rounds.as_slice(), RoundKind::FinalFour));
+    let championship = national.and_then(|r| round_games(r.rounds.as_slice(), RoundKind::Championship));
+
+    let selected_idx = if app.state.bracket.view_round == RoundKind::Championship {
+        2
+    } else {
+        app.state.bracket.selected_game.min(1)
+    };
+
+    f.render_widget(
+        FinalFourView {
+            semi_left: semifinals.and_then(|g| g.first()),
+            semi_right: semifinals.and_then(|g| g.get(1)),
+            championship: championship.and_then(|g| g.first()),
+            selected_idx,
+            theme: BannerTheme::Dark,
+        },
+        area,
+    );
+}
+
+fn draw_championship_view(f: &mut Frame, area: Rect, tournament: &ncaa_api::Tournament) {
+    let national = tournament.regions.iter().find(|r| r.name == "National");
+    let championship = national.and_then(|r| round_games(r.rounds.as_slice(), RoundKind::Championship));
+    let Some(game) = championship.and_then(|g| g.first()) else {
+        f.render_widget(
+            Paragraph::new("No championship game available")
+                .style(Style::default().fg(Color::DarkGray))
+                .alignment(Alignment::Center),
+            area,
+        );
+        return;
+    };
+
+    let top = format_seed_team(&game.top, game.score.map(|(s, _)| s));
+    let bot = format_seed_team(&game.bottom, game.score.map(|(_, s)| s));
+    let status = match game.status {
+        GameStatus::Final => "FINAL".to_string(),
+        GameStatus::InProgress => format!(
+            "LIVE {} {}",
+            game.period.unwrap_or_default(),
+            game.clock.clone().unwrap_or_default()
+        ),
+        GameStatus::Postponed => "PPD".to_string(),
+        GameStatus::Scheduled => game
+            .start_time
+            .map(|t| t.format("%m/%d %I:%M%p").to_string())
+            .unwrap_or_else(|| "SCHEDULED".to_string()),
+    };
+    let text = format!("NCAA Championship\n\n{top}\nvs\n{bot}\n\n[{status}]");
+    f.render_widget(
+        Paragraph::new(text)
+            .style(Style::default().fg(Color::White))
+            .alignment(Alignment::Center),
+        area,
+    );
+}
+
+fn draw_scoreboard(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::White).title(" Scoreboard ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    let Some(tournament) = app.state.bracket.tournament.as_ref() else {
+        f.render_widget(
+            Paragraph::new("No tournament loaded. Return to Bracket tab.")
+                .style(Style::default().fg(Color::DarkGray)),
+            inner,
+        );
+        return;
+    };
+
+    let region = if app.state.bracket.view_round.is_final_four() {
+        tournament.regions.iter().find(|r| r.name == "National")
+    } else {
+        tournament
+            .regions
+            .iter()
+            .filter(|r| r.name != "National")
+            .nth(app.state.bracket.selected_region)
+    };
+
+    let Some(region) = region else {
+        f.render_widget(Paragraph::new("No region available"), inner);
+        return;
+    };
+
+    let games = round_games(region.rounds.as_slice(), app.state.bracket.view_round).unwrap_or(&[]);
+    if games.is_empty() {
+        f.render_widget(Paragraph::new("No games in this round"), inner);
+        return;
+    }
+
+    let mut lines = Vec::with_capacity(games.len() + 3);
+    lines.push(format!("{} | {}", region.name, app.state.bracket.view_round.label()));
+    lines.push("j/k to move, Enter for detail, r to cycle region".to_string());
+    lines.push(String::new());
+
+    for (idx, game) in games.iter().enumerate() {
+        let marker = if idx == app.state.bracket.selected_game { ">" } else { " " };
+        let status = match game.status {
+            GameStatus::Final => "FINAL".to_string(),
+            GameStatus::InProgress => format!("LIVE {} {}", game.period.unwrap_or_default(), game.clock.clone().unwrap_or_default()),
+            GameStatus::Postponed => "PPD".to_string(),
+            GameStatus::Scheduled => game
+                .start_time
+                .map(|t| t.format("%m/%d %I:%M%p").to_string())
+                .unwrap_or_else(|| "SCHEDULED".to_string()),
+        };
+
+        let top = format_seed_team(&game.top, game.score.map(|(s, _)| s));
+        let bot = format_seed_team(&game.bottom, game.score.map(|(_, s)| s));
+        lines.push(format!("{marker} {top} vs {bot}  [{status}]"));
+    }
+
+    f.render_widget(Paragraph::new(lines.join("\n")), inner);
+}
+
+fn draw_game_detail(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::White).title(" Game Detail ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    let Some(detail) = app.state.game_detail.detail.as_ref() else {
+        let msg = if let Some(err) = app.state.last_error.as_deref() {
+            format!("Load failed:\n{err}")
+        } else {
+            "Select a game in Bracket or Scoreboard and press Enter".to_string()
+        };
+        f.render_widget(Paragraph::new(msg), inner);
+        return;
+    };
+
+    let mut lines = Vec::new();
+    lines.push(format!("Game ID: {}", detail.game_id));
+    lines.push(String::new());
+
+    let away_name = detail
+        .away_box
+        .team
+        .as_ref()
+        .map(|t| t.short_name.as_str())
+        .unwrap_or("Away");
+    let home_name = detail
+        .home_box
+        .team
+        .as_ref()
+        .map(|t| t.short_name.as_str())
+        .unwrap_or("Home");
+
+    lines.push(format!("{} totals: {} PTS, {} REB, {} AST", away_name, detail.away_box.totals.points, detail.away_box.totals.rebounds, detail.away_box.totals.assists));
+    lines.push(format!("{} totals: {} PTS, {} REB, {} AST", home_name, detail.home_box.totals.points, detail.home_box.totals.rebounds, detail.home_box.totals.assists));
+    lines.push(String::new());
+    lines.push("Recent Plays: (j/k scroll)".to_string());
+
+    let max_lines = inner.height.saturating_sub(lines.len() as u16) as usize;
+    let offset = app.state.game_detail.scroll_offset as usize;
+    for p in detail.plays.iter().skip(offset).take(max_lines.max(1)) {
+        lines.push(format!("P{} {}  {}-{}  {}", p.period, p.clock, p.away_score, p.home_score, p.description));
+    }
+
+    f.render_widget(Paragraph::new(lines.join("\n")), inner);
+}
+
+fn format_seed_team(seed: &TeamSeed, score: Option<u16>) -> String {
+    let seed_str = if seed.seed > 0 {
+        format!("{}", seed.seed)
+    } else {
+        "-".to_string()
+    };
+    let team = seed
+        .team
+        .as_ref()
+        .map(|t| t.short_name.clone())
+        .or_else(|| seed.placeholder.clone())
+        .unwrap_or_else(|| "TBD".to_string());
+    let score = score.map_or("--".to_string(), |s| s.to_string());
+    format!("({seed_str}) {team} {score}")
+}
+
+fn round_games(rounds: &[Round], kind: RoundKind) -> Option<&[Game]> {
+    rounds
+        .iter()
+        .find(|r| r.kind == kind)
+        .map(|r| r.games.as_slice())
+}
+
+fn draw_placeholder(f: &mut Frame, area: Rect, msg: &str) {
+    let block = default_border(Color::DarkGray);
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+    f.render_widget(
+        Paragraph::new(msg)
+            .style(Style::default().fg(Color::DarkGray))
+            .alignment(Alignment::Center),
+        inner,
+    );
+}
+
+fn draw_loading_spinner(f: &mut Frame, area: Rect, app: &App, loading: LoadingState) {
+    if !loading.is_loading && loading.spinner_char != ERROR_CHAR {
+        return;
+    }
+    let style = match loading.spinner_char {
+        ERROR_CHAR => Style::default().fg(Color::Red),
+        _ => Style::default().fg(Color::White),
+    };
+    let spinner = Paragraph::new(loading.spinner_char.to_string())
+        .alignment(Alignment::Right)
+        .style(style);
+    let area = if app.settings.full_screen {
+        Rect::new(area.width.saturating_sub(3), area.height.saturating_sub(2), 1, 1)
+    } else {
+        Rect::new(area.width.saturating_sub(11), 1, 1, 1)
+    };
+    f.render_widget(spinner, area);
 }
