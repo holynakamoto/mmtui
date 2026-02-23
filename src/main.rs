@@ -21,6 +21,10 @@ use tui::{Terminal, backend::CrosstermBackend};
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    if handle_cli_args() {
+        return Ok(());
+    }
+
     better_panic::install();
 
     let backend = CrosstermBackend::new(io::stdout());
@@ -72,6 +76,40 @@ async fn main() -> anyhow::Result<()> {
     animation_task.abort();
 
     Ok(())
+}
+
+fn handle_cli_args() -> bool {
+    let mut args = std::env::args().skip(1);
+    let Some(arg) = args.next() else {
+        return false;
+    };
+
+    match arg.as_str() {
+        "-h" | "--help" => {
+            println!("{}", usage_text());
+            true
+        }
+        "-V" | "--version" => {
+            println!("mmtui {}", env!("CARGO_PKG_VERSION"));
+            true
+        }
+        _ => {
+            eprintln!("Unknown argument: {arg}\n\n{}", usage_text());
+            std::process::exit(2);
+        }
+    }
+}
+
+fn usage_text() -> &'static str {
+    "mmtui - NCAA March Madness terminal UI
+
+Usage:
+  mmtui
+  mmtui --help
+  mmtui --version
+
+Environment:
+  MMTUI_BRACKET_JSON   Path to local tournament JSON snapshot"
 }
 
 async fn main_ui_loop(

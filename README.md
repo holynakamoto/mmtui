@@ -12,6 +12,15 @@ A terminal user interface for the NCAA March Madness tournament.
 
 ## Install
 
+### Homebrew
+
+Tap and install:
+
+```bash
+brew tap holynakamoto/mmtui
+brew install --HEAD mmtui
+```
+
 ### Cargo
 
 ```bash
