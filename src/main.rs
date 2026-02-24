@@ -6,6 +6,7 @@ mod state;
 mod ui;
 
 use crate::app::App;
+use crate::state::chat::{ChatCommand, ChatEvent, ChatWorker};
 use crate::state::messages::{NetworkRequest, NetworkResponse, UiEvent};
 use crate::state::network::{LoadingState, NetworkWorker};
 use crate::state::refresher::PeriodicRefresher;
@@ -41,6 +42,8 @@ async fn main() -> anyhow::Result<()> {
     let (ui_event_tx, ui_event_rx) = mpsc::channel::<UiEvent>(100);
     let (network_req_tx, network_req_rx) = mpsc::channel::<NetworkRequest>(100);
     let (network_resp_tx, network_resp_rx) = mpsc::channel::<NetworkResponse>(100);
+    let (chat_cmd_tx, chat_cmd_rx) = mpsc::channel::<ChatCommand>(100);
+    let (chat_evt_tx, chat_evt_rx) = mpsc::channel::<ChatEvent>(100);
 
     // Input handler thread
     let input_handler = tokio::spawn(input_handler_task(ui_event_tx.clone()));
@@ -48,6 +51,24 @@ async fn main() -> anyhow::Result<()> {
     // Network thread
     let network_worker = NetworkWorker::new(network_req_rx, network_resp_tx);
     let network_task = tokio::spawn(network_worker.run());
+
+    // Chat thread
+    let (chat_endpoint, chat_room, chat_username) = {
+        let guard = app.lock().await;
+        (
+            guard.state.chat.endpoint.clone(),
+            guard.state.chat.room.clone(),
+            guard.state.chat.username.clone(),
+        )
+    };
+    let chat_worker = ChatWorker {
+        url: chat_endpoint,
+        room: chat_room,
+        username: chat_username,
+        commands: chat_cmd_rx,
+        events: chat_evt_tx,
+    };
+    let chat_task = tokio::spawn(chat_worker.run());
 
     // Periodic score refresh thread (every 30s)
     let periodic_updater = PeriodicRefresher::new(network_req_tx.clone());
@@ -68,10 +89,20 @@ async fn main() -> anyhow::Result<()> {
     // Trigger bracket load on startup
     let _ = ui_event_tx.send(UiEvent::AppStarted).await;
 
-    main_ui_loop(terminal, app, ui_event_rx, network_req_tx, network_resp_rx).await;
+    main_ui_loop(
+        terminal,
+        app,
+        ui_event_rx,
+        network_req_tx,
+        network_resp_rx,
+        chat_cmd_tx,
+        chat_evt_rx,
+    )
+    .await;
 
     input_handler.abort();
     network_task.abort();
+    chat_task.abort();
     periodic_task.abort();
     animation_task.abort();
 
@@ -109,7 +140,9 @@ Usage:
   mmtui --version
 
 Environment:
-  MMTUI_BRACKET_JSON   Path to local tournament JSON snapshot"
+  MMTUI_BRACKET_JSON   Path to local tournament JSON snapshot
+  MMTUI_CHAT_WS        WebSocket chat relay URL (default ws://127.0.0.1:8787)
+  MMTUI_CHAT_ROOM      Chat room name (default march-madness)"
 }
 
 async fn main_ui_loop(
@@ -118,13 +151,15 @@ async fn main_ui_loop(
     mut ui_events: mpsc::Receiver<UiEvent>,
     network_requests: mpsc::Sender<NetworkRequest>,
     mut network_responses: mpsc::Receiver<NetworkResponse>,
+    chat_commands: mpsc::Sender<ChatCommand>,
+    mut chat_events: mpsc::Receiver<ChatEvent>,
 ) {
     let mut loading = LoadingState::default();
 
     loop {
         tokio::select! {
             Some(ui_event) = ui_events.recv() => {
-                let should_redraw = handle_ui_event(ui_event, &app, &network_requests).await;
+                let should_redraw = handle_ui_event(ui_event, &app, &network_requests, &chat_commands).await;
                 if should_redraw && !loading.is_loading {
                     let mut app_guard = app.lock().await;
                     draw::draw(&mut terminal, &mut app_guard, loading);
@@ -139,6 +174,14 @@ async fn main_ui_loop(
                     draw::draw(&mut terminal, &mut app_guard, loading);
                 }
             }
+
+            Some(chat_event) = chat_events.recv() => {
+                let should_redraw = handle_chat_response(chat_event, &app).await;
+                if should_redraw && !loading.is_loading {
+                    let mut app_guard = app.lock().await;
+                    draw::draw(&mut terminal, &mut app_guard, loading);
+                }
+            }
         }
     }
 }
@@ -147,6 +190,7 @@ async fn handle_ui_event(
     ui_event: UiEvent,
     app: &Arc<Mutex<App>>,
     network_requests: &mpsc::Sender<NetworkRequest>,
+    chat_commands: &mpsc::Sender<ChatCommand>,
 ) -> bool {
     match ui_event {
         UiEvent::AppStarted => {
@@ -154,7 +198,7 @@ async fn handle_ui_event(
             true
         }
         UiEvent::KeyPressed(key_event) => {
-            keys::handle_key_bindings(key_event, app, network_requests).await;
+            keys::handle_key_bindings(key_event, app, network_requests, chat_commands).await;
             true
         }
         UiEvent::Resize => true,
@@ -164,6 +208,17 @@ async fn handle_ui_event(
             true
         }
     }
+}
+
+async fn handle_chat_response(response: ChatEvent, app: &Arc<Mutex<App>>) -> bool {
+    let mut guard = app.lock().await;
+    match response {
+        ChatEvent::Connected => guard.on_chat_connected(),
+        ChatEvent::Disconnected => guard.on_chat_disconnected(),
+        ChatEvent::Message(msg) => guard.on_chat_message(msg),
+        ChatEvent::Error(message) => guard.on_chat_error(message),
+    }
+    true
 }
 
 async fn handle_network_response(

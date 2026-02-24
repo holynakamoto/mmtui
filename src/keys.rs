@@ -1,4 +1,5 @@
 use crate::app::{App, MenuItem};
+use crate::state::chat::ChatCommand;
 use crate::state::messages::NetworkRequest;
 use crossterm::event::KeyCode::Char;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
@@ -9,6 +10,7 @@ pub async fn handle_key_bindings(
     key_event: KeyEvent,
     app: &Arc<Mutex<App>>,
     network_requests: &mpsc::Sender<NetworkRequest>,
+    chat_commands: &mpsc::Sender<ChatCommand>,
 ) {
     let mut guard = app.lock().await;
     let mut refresh_live_feed = false;
@@ -36,7 +38,16 @@ pub async fn handle_key_bindings(
                 guard.state.chat.input.clear();
             }
             (KeyCode::Enter, _) => {
-                guard.state.chat.submit_input();
+                let outbound = guard.state.chat.submit_input();
+                drop(guard);
+                if let Some(outbound) = outbound {
+                    let _ = chat_commands
+                        .send(ChatCommand::Send {
+                            body: outbound.body,
+                            message_id: outbound.id,
+                        })
+                        .await;
+                }
             }
             (KeyCode::Backspace, _) => {
                 guard.state.chat.input.pop();

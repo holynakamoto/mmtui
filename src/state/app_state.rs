@@ -195,10 +195,17 @@ pub struct GameDetailState {
 
 #[derive(Debug, Clone, Default)]
 pub struct ChatMessage {
+    pub id: String,
     pub author: String,
     pub body: String,
     pub timestamp: String,
     pub is_system: bool,
+}
+
+#[derive(Debug, Clone)]
+pub struct OutboundChatMessage {
+    pub id: String,
+    pub body: String,
 }
 
 #[derive(Debug)]
@@ -208,6 +215,10 @@ pub struct ChatState {
     pub composing: bool,
     pub scroll_offset: u16,
     pub username: String,
+    pub room: String,
+    pub connected: bool,
+    pub endpoint: String,
+    seen_ids: HashSet<String>,
 }
 
 impl Default for ChatState {
@@ -218,8 +229,9 @@ impl Default for ChatState {
             .unwrap_or_else(|| "fan".to_string());
         Self {
             messages: vec![ChatMessage {
+                id: "system-init".to_string(),
                 author: "system".to_string(),
-                body: "Chat is local-only for now. Shared rooms coming soon.".to_string(),
+                body: "Chat starting... connecting to relay.".to_string(),
                 timestamp: Local::now().format("%H:%M").to_string(),
                 is_system: true,
             }],
@@ -227,31 +239,68 @@ impl Default for ChatState {
             composing: false,
             scroll_offset: 0,
             username,
+            room: std::env::var("MMTUI_CHAT_ROOM").unwrap_or_else(|_| "march-madness".to_string()),
+            connected: false,
+            endpoint: std::env::var("MMTUI_CHAT_WS")
+                .unwrap_or_else(|_| "ws://127.0.0.1:8787".to_string()),
+            seen_ids: HashSet::new(),
         }
     }
 }
 
 impl ChatState {
-    pub fn submit_input(&mut self) {
+    pub fn submit_input(&mut self) -> Option<OutboundChatMessage> {
         let msg = self.input.trim();
         if msg.is_empty() {
             self.composing = false;
             self.input.clear();
-            return;
+            return None;
         }
-        self.messages.push(ChatMessage {
-            author: self.username.clone(),
+        let message = OutboundChatMessage {
+            id: format!(
+                "{}-{}",
+                self.username,
+                Local::now()
+                    .timestamp_nanos_opt()
+                    .unwrap_or_else(|| Local::now().timestamp_micros() * 1000)
+            ),
             body: msg.to_string(),
+        };
+        self.ingest_message(ChatMessage {
+            id: message.id.clone(),
+            author: self.username.clone(),
+            body: message.body.clone(),
             timestamp: Local::now().format("%H:%M").to_string(),
             is_system: false,
         });
         self.scroll_offset = 0;
         self.composing = false;
         self.input.clear();
+        Some(message)
+    }
+
+    pub fn ingest_message(&mut self, msg: ChatMessage) {
+        if !msg.id.is_empty() && self.seen_ids.contains(&msg.id) {
+            return;
+        }
+        if !msg.id.is_empty() {
+            self.seen_ids.insert(msg.id.clone());
+        }
+        self.messages.push(msg);
         if self.messages.len() > 200 {
             let remove_count = self.messages.len() - 200;
             self.messages.drain(0..remove_count);
         }
+    }
+
+    pub fn push_system(&mut self, body: impl Into<String>) {
+        self.messages.push(ChatMessage {
+            id: format!("system-{}", Local::now().timestamp_millis()),
+            author: "system".to_string(),
+            body: body.into(),
+            timestamp: Local::now().format("%H:%M").to_string(),
+            is_system: true,
+        });
     }
 }
 

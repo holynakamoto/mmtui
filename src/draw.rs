@@ -618,6 +618,15 @@ fn draw_chat(f: &mut Frame, area: Rect, app: &App) {
         Layout::vertical([Constraint::Fill(1), Constraint::Length(2)]).areas(inner);
 
     let mut lines = Vec::new();
+    let status = if app.state.chat.connected { "online" } else { "offline" };
+    lines.push(Line::from(vec![
+        Span::styled("room ", Style::default().fg(Color::DarkGray)),
+        Span::styled(app.state.chat.room.as_str(), Style::default().fg(Color::Gray)),
+        Span::styled("  status ", Style::default().fg(Color::DarkGray)),
+        Span::styled(status, Style::default().fg(if app.state.chat.connected { Color::Green } else { Color::Red })),
+    ]));
+    lines.push(Line::from(""));
+
     for msg in &app.state.chat.messages {
         let prefix = format!("[{}] {}: ", msg.timestamp, msg.author);
         let style = if msg.is_system {
@@ -648,7 +657,8 @@ fn draw_chat(f: &mut Frame, area: Rect, app: &App) {
     let input = if app.state.chat.composing {
         format!("> {}_", app.state.chat.input)
     } else {
-        "Press Enter or i to type. Esc to cancel. j/k scroll.".to_string()
+        "Press Enter/i to type. Esc cancel. j/k scroll. Set MMTUI_CHAT_WS for remote relay."
+            .to_string()
     };
     let input_style = if app.state.chat.composing {
         Style::default().fg(Color::Yellow)

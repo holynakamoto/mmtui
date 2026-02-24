@@ -80,6 +80,26 @@ If using a local snapshot file:
 MMTUI_BRACKET_JSON=2025_bracket.json mmtui
 ```
 
+### Global Chat Relay
+
+Run a relay server (deploy anywhere reachable by clients):
+
+```bash
+cargo run --bin chat-relay
+```
+
+Point clients at that relay:
+
+```bash
+MMTUI_CHAT_WS=ws://YOUR_SERVER:8787 mmtui
+```
+
+Optional room override:
+
+```bash
+MMTUI_CHAT_ROOM=your-room MMTUI_CHAT_WS=ws://YOUR_SERVER:8787 mmtui
+```
+
 ## Navigation
 
 - `Enter`: continue from intro / open selected game detail

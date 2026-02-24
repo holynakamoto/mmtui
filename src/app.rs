@@ -1,5 +1,6 @@
 use crate::state::app_settings::AppSettings;
-use crate::state::app_state::AppState;
+use crate::state::app_state::{AppState, ChatMessage};
+use crate::state::chat::ChatWireMessage;
 use ncaa_api::{Game, GameDetail, Tournament};
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -138,5 +139,33 @@ impl App {
 
     pub fn on_error(&mut self, message: String) {
         self.state.last_error = Some(message);
+    }
+
+    pub fn on_chat_connected(&mut self) {
+        self.state.chat.connected = true;
+        self.state
+            .chat
+            .push_system(format!("connected to {}", self.state.chat.endpoint));
+    }
+
+    pub fn on_chat_disconnected(&mut self) {
+        if self.state.chat.connected {
+            self.state.chat.push_system("chat disconnected, retrying...");
+        }
+        self.state.chat.connected = false;
+    }
+
+    pub fn on_chat_error(&mut self, message: String) {
+        self.state.chat.push_system(format!("chat error: {message}"));
+    }
+
+    pub fn on_chat_message(&mut self, msg: ChatWireMessage) {
+        self.state.chat.ingest_message(ChatMessage {
+            id: msg.id,
+            author: msg.author,
+            body: msg.body,
+            timestamp: msg.timestamp,
+            is_system: false,
+        });
     }
 }
