@@ -25,6 +25,30 @@ pub async fn handle_key_bindings(
         return;
     }
 
+    if guard.state.active_tab == MenuItem::Chat && guard.state.chat.composing {
+        match (key_event.code, key_event.modifiers) {
+            (Char('c'), KeyModifiers::CONTROL) => {
+                crate::cleanup_terminal();
+                std::process::exit(0);
+            }
+            (KeyCode::Esc, _) => {
+                guard.state.chat.composing = false;
+                guard.state.chat.input.clear();
+            }
+            (KeyCode::Enter, _) => {
+                guard.state.chat.submit_input();
+            }
+            (KeyCode::Backspace, _) => {
+                guard.state.chat.input.pop();
+            }
+            (Char(ch), KeyModifiers::NONE | KeyModifiers::SHIFT) => {
+                guard.state.chat.input.push(ch);
+            }
+            _ => {}
+        }
+        return;
+    }
+
     match (guard.state.active_tab, key_event.code, key_event.modifiers) {
         // Quit
         (_, Char('q'), _) | (_, Char('c'), KeyModifiers::CONTROL) => {
@@ -36,6 +60,7 @@ pub async fn handle_key_bindings(
         (_, Char('1'), _) => guard.update_tab(MenuItem::Bracket),
         (_, Char('2'), _) => guard.update_tab(MenuItem::Scoreboard),
         (_, Char('3'), _) => guard.update_tab(MenuItem::GameDetail),
+        (_, Char('4'), _) => guard.update_tab(MenuItem::Chat),
         (_, Char('?'), _) => guard.update_tab(MenuItem::Help),
         (MenuItem::Help, KeyCode::Esc, _) => guard.exit_help(),
 
@@ -80,6 +105,21 @@ pub async fn handle_key_bindings(
                 guard.state.game_detail.scroll_offset.saturating_sub(1);
         }
         (MenuItem::GameDetail, KeyCode::Esc, _) => guard.update_tab(MenuItem::Bracket),
+
+        // Chat controls
+        (MenuItem::Chat, Char('i'), _) | (MenuItem::Chat, KeyCode::Enter, _) => {
+            guard.state.chat.composing = true;
+        }
+        (MenuItem::Chat, KeyCode::Esc, _) => {
+            guard.update_tab(MenuItem::Bracket);
+        }
+        (MenuItem::Chat, Char('j') | KeyCode::Down, _) => {
+            let max_offset = guard.state.chat.messages.len().saturating_sub(1) as u16;
+            guard.state.chat.scroll_offset = (guard.state.chat.scroll_offset + 1).min(max_offset);
+        }
+        (MenuItem::Chat, Char('k') | KeyCode::Up, _) => {
+            guard.state.chat.scroll_offset = guard.state.chat.scroll_offset.saturating_sub(1);
+        }
 
         // Scoreboard navigation
         (MenuItem::Scoreboard, Char('j') | KeyCode::Down, _) => {

@@ -8,6 +8,7 @@ pub enum MenuItem {
     Bracket,
     Scoreboard,
     GameDetail,
+    Chat,
     Help,
 }
 
@@ -69,6 +70,9 @@ impl App {
         }
         self.state.previous_tab = self.state.active_tab;
         self.state.active_tab = next;
+        if self.state.active_tab == MenuItem::Chat {
+            self.state.chat.scroll_offset = 0;
+        }
     }
 
     pub fn exit_help(&mut self) {

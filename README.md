@@ -87,6 +87,8 @@ MMTUI_BRACKET_JSON=2025_bracket.json mmtui
 - `j` / `k` or `↓` / `↑`: move selection
 - `r`: cycle region
 - `1` / `2` / `3`: Bracket / Scoreboard / Game Detail tabs
+- `4`: Chat tab
+- Chat controls: `i` or `Enter` to compose, `Enter` to send, `Esc` to cancel
 - `?`: Help
 - `Esc`: back from Help or Game Detail
 - `f`: toggle fullscreen

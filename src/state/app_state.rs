@@ -1,4 +1,5 @@
 use crate::app::MenuItem;
+use chrono::Local;
 use ncaa_api::{GameDetail, RoundKind, Tournament};
 use std::collections::HashSet;
 
@@ -189,6 +190,72 @@ pub struct GameDetailState {
 }
 
 // ---------------------------------------------------------------------------
+// Chat state
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Default)]
+pub struct ChatMessage {
+    pub author: String,
+    pub body: String,
+    pub timestamp: String,
+    pub is_system: bool,
+}
+
+#[derive(Debug)]
+pub struct ChatState {
+    pub messages: Vec<ChatMessage>,
+    pub input: String,
+    pub composing: bool,
+    pub scroll_offset: u16,
+    pub username: String,
+}
+
+impl Default for ChatState {
+    fn default() -> Self {
+        let username = std::env::var("USER")
+            .ok()
+            .filter(|u| !u.trim().is_empty())
+            .unwrap_or_else(|| "fan".to_string());
+        Self {
+            messages: vec![ChatMessage {
+                author: "system".to_string(),
+                body: "Chat is local-only for now. Shared rooms coming soon.".to_string(),
+                timestamp: Local::now().format("%H:%M").to_string(),
+                is_system: true,
+            }],
+            input: String::new(),
+            composing: false,
+            scroll_offset: 0,
+            username,
+        }
+    }
+}
+
+impl ChatState {
+    pub fn submit_input(&mut self) {
+        let msg = self.input.trim();
+        if msg.is_empty() {
+            self.composing = false;
+            self.input.clear();
+            return;
+        }
+        self.messages.push(ChatMessage {
+            author: self.username.clone(),
+            body: msg.to_string(),
+            timestamp: Local::now().format("%H:%M").to_string(),
+            is_system: false,
+        });
+        self.scroll_offset = 0;
+        self.composing = false;
+        self.input.clear();
+        if self.messages.len() > 200 {
+            let remove_count = self.messages.len() - 200;
+            self.messages.drain(0..remove_count);
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Live feed state (lightweight recent play-by-play view)
 // ---------------------------------------------------------------------------
 
@@ -253,6 +320,7 @@ pub struct AppState {
     pub bracket: BracketState,
     pub game_detail: GameDetailState,
     pub live_feed: LiveFeedState,
+    pub chat: ChatState,
     pub animation: AnimationState,
 }
 

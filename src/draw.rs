@@ -13,7 +13,7 @@ use crate::state::network::{ERROR_CHAR, LoadingState};
 use crate::ui::layout::LayoutAreas;
 use ncaa_api::{Game, GameStatus, Round, RoundKind, TeamSeed};
 
-static TABS: &[&str; 3] = &["Bracket", "Scoreboard", "Game Detail"];
+static TABS: &[&str; 4] = &["Bracket", "Scoreboard", "Game Detail", "Chat"];
 
 pub fn draw<B>(terminal: &mut Terminal<B>, app: &mut App, loading: LoadingState)
 where
@@ -43,10 +43,11 @@ where
                 MenuItem::Bracket => draw_bracket(f, layout.main, app),
                 MenuItem::Scoreboard => draw_scoreboard(f, layout.main, app),
                 MenuItem::GameDetail => draw_game_detail(f, layout.main, app),
+                MenuItem::Chat => draw_chat(f, layout.main, app),
                 MenuItem::Help => draw_placeholder(
                     f,
                     layout.main,
-                    "Help: q=quit  1=Bracket  2=Scoreboard  3=GameDetail  ←/→=round  ↑/↓=game  Enter=select  r=region",
+                    "Help: q=quit  1=Bracket  2=Scoreboard  3=GameDetail  4=Chat  ←/→=round  ↑/↓=game  Enter=select  r=region",
                 ),
             }
 
@@ -100,6 +101,7 @@ fn draw_tabs(f: &mut Frame, tab_bar: [Rect; 2], app: &App) {
         MenuItem::Bracket => 0,
         MenuItem::Scoreboard => 1,
         MenuItem::GameDetail => 2,
+        MenuItem::Chat => 3,
         MenuItem::Help => 0,
     };
 
@@ -601,6 +603,65 @@ fn draw_game_detail(f: &mut Frame, area: Rect, app: &App) {
     }
 
     f.render_widget(Paragraph::new(lines.join("\n")), inner);
+}
+
+fn draw_chat(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::White).title(" Chat ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    if inner.width == 0 || inner.height < 3 {
+        return;
+    }
+
+    let [messages_area, input_area] =
+        Layout::vertical([Constraint::Fill(1), Constraint::Length(2)]).areas(inner);
+
+    let mut lines = Vec::new();
+    for msg in &app.state.chat.messages {
+        let prefix = format!("[{}] {}: ", msg.timestamp, msg.author);
+        let style = if msg.is_system {
+            Style::default().fg(Color::DarkGray)
+        } else {
+            Style::default().fg(Color::White)
+        };
+        let body_width = messages_area
+            .width
+            .saturating_sub(prefix.chars().count() as u16)
+            .max(8) as usize;
+        let clipped: String = msg.body.chars().take(body_width).collect();
+        lines.push(Line::from(vec![
+            Span::styled(prefix, style),
+            Span::styled(clipped, style),
+        ]));
+    }
+
+    let visible = messages_area.height as usize;
+    let total = lines.len();
+    let offset = app.state.chat.scroll_offset as usize;
+    let end = total.saturating_sub(offset);
+    let start = end.saturating_sub(visible);
+    let window = if start < end { lines[start..end].to_vec() } else { Vec::new() };
+    f.render_widget(Paragraph::new(window), messages_area);
+
+    let mode = if app.state.chat.composing { "typing" } else { "idle" };
+    let input = if app.state.chat.composing {
+        format!("> {}_", app.state.chat.input)
+    } else {
+        "Press Enter or i to type. Esc to cancel. j/k scroll.".to_string()
+    };
+    let input_style = if app.state.chat.composing {
+        Style::default().fg(Color::Yellow)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+    let input_block = default_border(Color::DarkGray).title(format!(" {} ", mode));
+    let input_inner = input_block.inner(input_area);
+    f.render_widget(input_block, input_area);
+    f.render_widget(
+        Paragraph::new(input).style(input_style),
+        input_inner,
+    );
 }
 
 fn format_seed_team(seed: &TeamSeed, score: Option<u16>) -> String {
