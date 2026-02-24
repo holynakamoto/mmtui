@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add a Live Feed panel in Bracket view that displays recent play-by-play for
   the selected game and highlights newly arrived plays.
+- Add global chat over WebSocket with reconnecting client support and a
+  `chat-relay` server binary for cross-geography chat rooms.
 
 ### Fixed
 
