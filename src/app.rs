@@ -3,6 +3,7 @@ use crate::state::app_state::{AppState, BracketPicks, ChatMessage, CompareRow};
 use crate::state::chat::ChatWireMessage;
 use chrono::Local;
 use ncaa_api::{Game, GameDetail, GameStatus, RoundKind, Tournament};
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -245,9 +246,10 @@ impl App {
             }
         }
 
+        let eliminated = build_eliminated_set(tournament);
         let mut rows = Vec::new();
         for (source, picks) in loaded {
-            rows.push(score_picks(tournament, &source, &picks));
+            rows.push(score_picks(tournament, &source, &picks, &eliminated));
         }
         rows.sort_by(|a, b| {
             b.points
@@ -331,6 +333,49 @@ fn round_weight(round: RoundKind) -> u32 {
     }
 }
 
+/// Build the set of eliminated team IDs from all Final games in the tournament.
+/// A team is eliminated if it participated in a Final game but was not the winner.
+fn build_eliminated_set(tournament: &Tournament) -> HashSet<String> {
+    let mut eliminated = HashSet::new();
+    for region in &tournament.regions {
+        for round in &region.rounds {
+            for game in &round.games {
+                if game.status != GameStatus::Final {
+                    continue;
+                }
+                let Some(winner_id) = game.winner_id.as_deref() else {
+                    continue;
+                };
+                for slot in [&game.top, &game.bottom] {
+                    if let Some(team) = &slot.team {
+                        if team.id != winner_id {
+                            eliminated.insert(team.id.clone());
+                        }
+                    }
+                }
+            }
+        }
+    }
+    eliminated
+}
+
+/// Returns true if the pick is still viable (picked team has not been eliminated).
+/// Handles both direct team ID picks and placeholder picks ("top:{game_id}", "bottom:{game_id}").
+/// Treats TBD slots (team = None) as alive — a team that hasn't entered the bracket can't be out.
+fn is_viable(selection: &str, game: &Game, eliminated: &HashSet<String>) -> bool {
+    let team_id: Option<&str> = if selection == format!("top:{}", game.id) {
+        game.top.team.as_ref().map(|t| t.id.as_str())
+    } else if selection == format!("bottom:{}", game.id) {
+        game.bottom.team.as_ref().map(|t| t.id.as_str())
+    } else {
+        Some(selection)
+    };
+    match team_id {
+        Some(id) => !eliminated.contains(id),
+        None => true, // TBD slot — not yet in the bracket, cannot be eliminated
+    }
+}
+
 fn load_picks_source(source: &str) -> Result<BracketPicks, String> {
     if source.starts_with("http://") || source.starts_with("https://") {
         let body = reqwest::blocking::get(source)
@@ -345,7 +390,7 @@ fn load_picks_source(source: &str) -> Result<BracketPicks, String> {
     }
 }
 
-fn score_picks(tournament: &Tournament, source: &str, picks: &BracketPicks) -> CompareRow {
+fn score_picks(tournament: &Tournament, source: &str, picks: &BracketPicks, eliminated: &HashSet<String>) -> CompareRow {
     let mut points = 0u32;
     let mut max_points = 0u32;
     let mut correct = 0u32;
@@ -391,7 +436,9 @@ fn score_picks(tournament: &Tournament, source: &str, picks: &BracketPicks) -> C
                         }
                     }
                     _ => {
-                        max_points += weight;
+                        if is_viable(selection, game, eliminated) {
+                            max_points += weight;
+                        }
                     }
                 }
             }
