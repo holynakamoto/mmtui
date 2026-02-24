@@ -68,10 +68,13 @@ pub async fn handle_key_bindings(
         }
 
         // Tab switching
-        (_, Char('1'), _) => guard.update_tab(MenuItem::Bracket),
-        (_, Char('2'), _) => guard.update_tab(MenuItem::Scoreboard),
+        (tab, Char('1'), _) if tab != MenuItem::PickWizard => guard.update_tab(MenuItem::Bracket),
+        (tab, Char('2'), _) if tab != MenuItem::PickWizard => {
+            guard.update_tab(MenuItem::Scoreboard)
+        }
         (_, Char('3'), _) => guard.update_tab(MenuItem::GameDetail),
         (_, Char('4'), _) => guard.update_tab(MenuItem::Chat),
+        (_, Char('5'), _) => guard.update_tab(MenuItem::PickWizard),
         (_, Char('?'), _) => guard.update_tab(MenuItem::Help),
         (MenuItem::Help, KeyCode::Esc, _) => guard.exit_help(),
 
@@ -131,6 +134,18 @@ pub async fn handle_key_bindings(
         (MenuItem::Chat, Char('k') | KeyCode::Up, _) => {
             guard.state.chat.scroll_offset = guard.state.chat.scroll_offset.saturating_sub(1);
         }
+
+        // Pick Wizard
+        (MenuItem::PickWizard, Char('1'), _) => guard.pick_wizard_select_top(),
+        (MenuItem::PickWizard, Char('2'), _) => guard.pick_wizard_select_bottom(),
+        (MenuItem::PickWizard, Char('j') | KeyCode::Down, _) => guard.state.pick_wizard.advance(),
+        (MenuItem::PickWizard, Char('k') | KeyCode::Up, _) => guard.pick_wizard_back(),
+        (MenuItem::PickWizard, Char('s'), _) => {
+            if let Err(e) = guard.save_pick_wizard_file() {
+                guard.on_error(e);
+            }
+        }
+        (MenuItem::PickWizard, KeyCode::Esc, _) => guard.update_tab(MenuItem::Bracket),
 
         // Scoreboard navigation
         (MenuItem::Scoreboard, Char('j') | KeyCode::Down, _) => {

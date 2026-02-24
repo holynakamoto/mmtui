@@ -1,7 +1,8 @@
 use crate::state::app_settings::AppSettings;
-use crate::state::app_state::{AppState, ChatMessage};
+use crate::state::app_state::{AppState, BracketPicks, ChatMessage};
 use crate::state::chat::ChatWireMessage;
 use ncaa_api::{Game, GameDetail, Tournament};
+use std::path::PathBuf;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum MenuItem {
@@ -10,6 +11,7 @@ pub enum MenuItem {
     Scoreboard,
     GameDetail,
     Chat,
+    PickWizard,
     Help,
 }
 
@@ -73,6 +75,9 @@ impl App {
         self.state.active_tab = next;
         if self.state.active_tab == MenuItem::Chat {
             self.state.chat.scroll_offset = 0;
+        }
+        if self.state.active_tab == MenuItem::PickWizard {
+            self.start_pick_wizard();
         }
     }
 
@@ -168,4 +173,71 @@ impl App {
             is_system: false,
         });
     }
+
+    pub fn start_pick_wizard(&mut self) {
+        let Some(tournament) = self.state.bracket.tournament.clone() else {
+            self.state
+                .chat
+                .push_system("Load bracket first before using Pick Wizard.");
+            self.state.last_error = Some("Pick Wizard needs bracket data".to_string());
+            return;
+        };
+        self.state
+            .pick_wizard
+            .load_from_tournament_2025_template(&tournament);
+        if let Ok(saved) = self.load_pick_wizard_file() {
+            self.state.pick_wizard.apply_saved_selections(saved.selections);
+        }
+    }
+
+    pub fn pick_wizard_select_top(&mut self) {
+        self.state.pick_wizard.select_top();
+        let _ = self.save_pick_wizard_file();
+    }
+
+    pub fn pick_wizard_select_bottom(&mut self) {
+        self.state.pick_wizard.select_bottom();
+        let _ = self.save_pick_wizard_file();
+    }
+
+    pub fn pick_wizard_back(&mut self) {
+        self.state.pick_wizard.back();
+    }
+
+    pub fn save_pick_wizard_file(&mut self) -> Result<(), String> {
+        let picks = self.state.pick_wizard.to_export(self.state.chat.username.clone());
+        let path = pick_wizard_path(picks.year);
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent).map_err(|e| format!("create dir failed: {e}"))?;
+        }
+        let payload = serde_json::to_string_pretty(&picks)
+            .map_err(|e| format!("serialize picks failed: {e}"))?;
+        std::fs::write(&path, payload).map_err(|e| format!("write picks failed: {e}"))?;
+        Ok(())
+    }
+
+    pub fn load_pick_wizard_file(&self) -> Result<BracketPicks, String> {
+        let path = pick_wizard_path(self.state.pick_wizard.year);
+        let content =
+            std::fs::read_to_string(&path).map_err(|e| format!("read picks failed: {e}"))?;
+        serde_json::from_str::<BracketPicks>(&content)
+            .map_err(|e| format!("parse picks failed: {e}"))
+    }
+}
+
+fn pick_wizard_path(year: u16) -> PathBuf {
+    if let Ok(config_dir) = std::env::var("XDG_CONFIG_HOME")
+        && !config_dir.trim().is_empty()
+    {
+        return PathBuf::from(config_dir).join("mmtui").join(format!("picks_{year}.json"));
+    }
+    if let Ok(home) = std::env::var("HOME")
+        && !home.trim().is_empty()
+    {
+        return PathBuf::from(home)
+            .join(".config")
+            .join("mmtui")
+            .join(format!("picks_{year}.json"));
+    }
+    PathBuf::from(format!("picks_{year}.json"))
 }

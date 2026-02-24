@@ -13,7 +13,7 @@ use crate::state::network::{ERROR_CHAR, LoadingState};
 use crate::ui::layout::LayoutAreas;
 use ncaa_api::{Game, GameStatus, Round, RoundKind, TeamSeed};
 
-static TABS: &[&str; 4] = &["Bracket", "Scoreboard", "Game Detail", "Chat"];
+static TABS: &[&str; 5] = &["Bracket", "Scoreboard", "Game Detail", "Chat", "Pick Wizard"];
 
 pub fn draw<B>(terminal: &mut Terminal<B>, app: &mut App, loading: LoadingState)
 where
@@ -44,10 +44,11 @@ where
                 MenuItem::Scoreboard => draw_scoreboard(f, layout.main, app),
                 MenuItem::GameDetail => draw_game_detail(f, layout.main, app),
                 MenuItem::Chat => draw_chat(f, layout.main, app),
+                MenuItem::PickWizard => draw_pick_wizard(f, layout.main, app),
                 MenuItem::Help => draw_placeholder(
                     f,
                     layout.main,
-                    "Help: q=quit  1=Bracket  2=Scoreboard  3=GameDetail  4=Chat  ←/→=round  ↑/↓=game  Enter=select  r=region",
+                    "Help: q=quit  1=Bracket  2=Scoreboard  3=GameDetail  4=Chat  5=Wizard  ←/→=round  ↑/↓=game  Enter=select  r=region",
                 ),
             }
 
@@ -102,6 +103,7 @@ fn draw_tabs(f: &mut Frame, tab_bar: [Rect; 2], app: &App) {
         MenuItem::Scoreboard => 1,
         MenuItem::GameDetail => 2,
         MenuItem::Chat => 3,
+        MenuItem::PickWizard => 4,
         MenuItem::Help => 0,
     };
 
@@ -776,6 +778,88 @@ fn draw_live_feed(f: &mut Frame, area: Rect, app: &App) {
         );
         let clipped: String = text.chars().take(inner.width.saturating_sub(1) as usize).collect();
         lines.push(Line::from(Span::styled(clipped, style)));
+    }
+
+    f.render_widget(Paragraph::new(lines), inner);
+}
+
+fn draw_pick_wizard(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::White).title(" Pick Wizard (2025 Template) ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    let wizard = &app.state.pick_wizard;
+    if wizard.games.is_empty() {
+        f.render_widget(
+            Paragraph::new("No wizard games loaded yet. Load bracket then press 5 again.")
+                .style(Style::default().fg(Color::DarkGray)),
+            inner,
+        );
+        return;
+    }
+
+    let mut lines = Vec::new();
+    lines.push(Line::from(format!(
+        "Progress: {}/{} picks",
+        wizard.selections.len(),
+        wizard.games.len()
+    )));
+    lines.push(Line::from("Keys: 1=top  2=bottom  j/k=next/prev  s=save  Esc=back"));
+    lines.push(Line::from(""));
+
+    if wizard.completed {
+        lines.push(Line::from(Span::styled(
+            "Wizard complete. Picks saved to ~/.config/mmtui/picks_2025.json",
+            Style::default().fg(Color::Green),
+        )));
+    } else if let Some(game) = wizard.current_game() {
+        lines.push(Line::from(format!(
+            "Game {}/{}  |  {}",
+            wizard.current_index + 1,
+            wizard.games.len(),
+            game.round.label()
+        )));
+        lines.push(Line::from(""));
+
+        let top_selected = wizard
+            .selections
+            .get(&game.game_id)
+            .and_then(|w| game.top_team_id.as_ref().map(|id| id == w))
+            .unwrap_or(false);
+        let bottom_selected = wizard
+            .selections
+            .get(&game.game_id)
+            .and_then(|w| game.bottom_team_id.as_ref().map(|id| id == w))
+            .unwrap_or(false);
+
+        lines.push(Line::from(vec![
+            Span::styled(
+                "1) ",
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                game.top_label.clone(),
+                if top_selected {
+                    Style::default().fg(Color::Green)
+                } else {
+                    Style::default().fg(Color::White)
+                },
+            ),
+        ]));
+        lines.push(Line::from(vec![
+            Span::styled(
+                "2) ",
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                game.bottom_label.clone(),
+                if bottom_selected {
+                    Style::default().fg(Color::Green)
+                } else {
+                    Style::default().fg(Color::White)
+                },
+            ),
+        ]));
     }
 
     f.render_widget(Paragraph::new(lines), inner);

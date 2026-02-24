@@ -1,7 +1,8 @@
 use crate::app::MenuItem;
 use chrono::Local;
-use ncaa_api::{GameDetail, RoundKind, Tournament};
-use std::collections::HashSet;
+use ncaa_api::{GameDetail, RoundKind, TeamSeed, Tournament};
+use serde::{Deserialize, Serialize};
+use std::collections::{HashMap, HashSet};
 
 // ---------------------------------------------------------------------------
 // Banner animation state
@@ -363,6 +364,174 @@ fn play_key(period: u8, clock: &str, desc: &str, away: u16, home: u16) -> String
 }
 
 // ---------------------------------------------------------------------------
+// Pick wizard state (currently pinned to 2025 bracket template)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone)]
+pub struct WizardGame {
+    pub game_id: String,
+    pub round: RoundKind,
+    pub top_label: String,
+    pub bottom_label: String,
+    pub top_team_id: Option<String>,
+    pub bottom_team_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BracketPicks {
+    pub user_id: String,
+    pub year: u16,
+    pub selections: HashMap<String, String>,
+}
+
+#[derive(Debug)]
+pub struct PickWizardState {
+    pub year: u16,
+    pub games: Vec<WizardGame>,
+    pub current_index: usize,
+    pub selections: HashMap<String, String>,
+    pub completed: bool,
+}
+
+impl Default for PickWizardState {
+    fn default() -> Self {
+        Self {
+            year: 2025,
+            games: Vec::new(),
+            current_index: 0,
+            selections: HashMap::new(),
+            completed: false,
+        }
+    }
+}
+
+impl PickWizardState {
+    pub fn load_from_tournament_2025_template(&mut self, tournament: &Tournament) {
+        self.year = 2025;
+        self.games.clear();
+        self.current_index = 0;
+        self.selections.clear();
+        self.completed = false;
+
+        let round_order = [
+            RoundKind::FirstFour,
+            RoundKind::First,
+            RoundKind::Second,
+            RoundKind::Sweet16,
+            RoundKind::Elite8,
+            RoundKind::FinalFour,
+            RoundKind::Championship,
+        ];
+
+        for round in round_order {
+            if round.is_final_four() {
+                if let Some(national) = tournament.regions.iter().find(|r| r.name == "National") {
+                    for r in &national.rounds {
+                        if r.kind == round {
+                            for g in &r.games {
+                                self.games.push(WizardGame {
+                                    game_id: g.id.clone(),
+                                    round,
+                                    top_label: format_seed_team(&g.top),
+                                    bottom_label: format_seed_team(&g.bottom),
+                                    top_team_id: g.top.team.as_ref().map(|t| t.id.clone()),
+                                    bottom_team_id: g.bottom.team.as_ref().map(|t| t.id.clone()),
+                                });
+                            }
+                        }
+                    }
+                }
+            } else {
+                for region in tournament.regions.iter().filter(|r| r.name != "National") {
+                    for r in &region.rounds {
+                        if r.kind == round {
+                            for g in &r.games {
+                                self.games.push(WizardGame {
+                                    game_id: g.id.clone(),
+                                    round,
+                                    top_label: format_seed_team(&g.top),
+                                    bottom_label: format_seed_team(&g.bottom),
+                                    top_team_id: g.top.team.as_ref().map(|t| t.id.clone()),
+                                    bottom_team_id: g.bottom.team.as_ref().map(|t| t.id.clone()),
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    pub fn current_game(&self) -> Option<&WizardGame> {
+        self.games.get(self.current_index)
+    }
+
+    pub fn select_top(&mut self) {
+        if let Some(g) = self.current_game().cloned() {
+            let winner = g.top_team_id.unwrap_or_else(|| format!("top:{}", g.game_id));
+            self.selections.insert(g.game_id, winner);
+            self.advance();
+        }
+    }
+
+    pub fn select_bottom(&mut self) {
+        if let Some(g) = self.current_game().cloned() {
+            let winner = g
+                .bottom_team_id
+                .unwrap_or_else(|| format!("bottom:{}", g.game_id));
+            self.selections.insert(g.game_id, winner);
+            self.advance();
+        }
+    }
+
+    pub fn advance(&mut self) {
+        if self.current_index + 1 < self.games.len() {
+            self.current_index += 1;
+        } else {
+            self.completed = true;
+        }
+    }
+
+    pub fn back(&mut self) {
+        self.current_index = self.current_index.saturating_sub(1);
+        self.completed = false;
+    }
+
+    pub fn to_export(&self, user_id: String) -> BracketPicks {
+        BracketPicks {
+            user_id,
+            year: self.year,
+            selections: self.selections.clone(),
+        }
+    }
+
+    pub fn apply_saved_selections(&mut self, selections: HashMap<String, String>) {
+        self.selections = selections;
+        self.completed = self.games.iter().all(|g| self.selections.contains_key(&g.game_id));
+        self.current_index = self
+            .games
+            .iter()
+            .position(|g| !self.selections.contains_key(&g.game_id))
+            .unwrap_or_else(|| self.games.len().saturating_sub(1));
+    }
+}
+
+fn format_seed_team(seed: &TeamSeed) -> String {
+    let seed_no = if seed.seed > 0 {
+        seed.seed.to_string()
+    } else {
+        "-".to_string()
+    };
+    let team = seed
+        .team
+        .as_ref()
+        .map(|t| t.short_name.clone())
+        .or_else(|| seed.placeholder.clone())
+        .unwrap_or_else(|| "TBD".to_string());
+    format!("({seed_no}) {team}")
+}
+
+// ---------------------------------------------------------------------------
 // Root app state
 // ---------------------------------------------------------------------------
 
@@ -377,6 +546,7 @@ pub struct AppState {
     pub game_detail: GameDetailState,
     pub live_feed: LiveFeedState,
     pub chat: ChatState,
+    pub pick_wizard: PickWizardState,
     pub animation: AnimationState,
 }
 

@@ -108,11 +108,23 @@ MMTUI_CHAT_ROOM=your-room MMTUI_CHAT_WS=ws://YOUR_SERVER:8787 mmtui
 - `r`: cycle region
 - `1` / `2` / `3`: Bracket / Scoreboard / Game Detail tabs
 - `4`: Chat tab
+- `5`: Pick Wizard tab (2025 template)
 - Chat controls: `i` or `Enter` to compose, `Enter` to send, `Esc` to cancel
+- Pick Wizard: `1`/`2` pick winner, `j`/`k` next/prev matchup, `s` save picks
 - `?`: Help
 - `Esc`: back from Help or Game Detail
 - `f`: toggle fullscreen
 - `q`: quit
+
+## Pick Wizard Persistence
+
+Pick Wizard currently uses the 2025 bracket template and writes your selections to:
+
+```text
+~/.config/mmtui/picks_2025.json
+```
+
+(`$XDG_CONFIG_HOME/mmtui/picks_2025.json` if `XDG_CONFIG_HOME` is set.)
 
 ## Release Executable
 
