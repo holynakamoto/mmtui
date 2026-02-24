@@ -14,10 +14,16 @@ A terminal user interface for the NCAA March Madness tournament.
 
 ### Homebrew
 
-Tap and install:
+Current (until `homebrew-core` PR is merged):
 
 ```bash
-brew tap holynakamoto/mmtui
+brew tap holynakamoto/mmtui git@github.com:holynakamoto/mmtui.git
+brew install holynakamoto/mmtui/mmtui
+```
+
+After `homebrew-core` merge:
+
+```bash
 brew install mmtui
 ```
 
