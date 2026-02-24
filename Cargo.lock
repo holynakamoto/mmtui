@@ -1263,7 +1263,7 @@ dependencies = [
 
 [[package]]
 name = "mmtui"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "anyhow",
  "better-panic",
@@ -1308,7 +1308,7 @@ dependencies = [
 
 [[package]]
 name = "ncaa-api"
-version = "0.1.5"
+version = "0.1.6"
 dependencies = [
  "chrono",
  "mockito",

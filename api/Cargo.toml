@@ -1,6 +1,6 @@
 [package]
 name = "ncaa-api"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Nick Moore <nick.moore@pm.me>"]
 edition = "2024"
 

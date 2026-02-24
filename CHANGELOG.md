@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `chat-relay` server binary for cross-geography chat rooms.
 - Add a new 2025 Pick Wizard tab with guided winner selection and local
   persistence to `~/.config/mmtui/picks_2025.json`.
+- Add a Compare tab that ranks brackets from local files and optional HTTP(S)
+  links.
 
 ### Fixed
 
@@ -27,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   empty future-year bracket loads during offseason/preseason.
 - Add an embedded `2025` bracket fallback so the app still loads data when
   ESPN returns no tournament entries.
+- Reduce chat reconnect noise with deduplicated system messages and exponential
+  reconnect backoff.
 
 ## [0.0.19] - 2025-07-30
 
