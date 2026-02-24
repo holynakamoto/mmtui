@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update Rust to 1.93
 - Update `ratatui` to 0.30.0
 
+### Added
+
+- Add a Live Feed panel in Bracket view that displays recent play-by-play for
+  the selected game and highlights newly arrived plays.
+
 ### Fixed
 
 - Improve tournament year selection and include a `2025` fallback to avoid
