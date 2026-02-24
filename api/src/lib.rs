@@ -1,5 +1,6 @@
 pub mod client;
 pub mod espn;
+pub mod henrygd;
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -55,7 +56,7 @@ pub struct Round {
 }
 
 /// Navigation axis replacing NaiveDate. Ordered from earliest to latest.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 pub enum RoundKind {
     #[default]
     FirstFour,    // Play-in games (Tuesday/Wednesday before the tournament)
@@ -121,6 +122,10 @@ impl RoundKind {
 #[derive(Debug, Clone, Default)]
 pub struct Game {
     pub id: String,
+    /// ESPN event ID used to route `fetch_game_detail` calls.
+    /// - NCAA-sourced games: `None` until the team-matching bridge fires.
+    /// - ESPN-sourced games (2025 fallback): `Some(id)` — same value as `id`.
+    pub espn_id: Option<String>,
     pub top: TeamSeed,    // higher seed (or "top" of the bracket slot)
     pub bottom: TeamSeed, // lower seed (or "bottom" of the bracket slot)
     pub status: GameStatus,

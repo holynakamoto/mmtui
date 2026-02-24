@@ -6,7 +6,12 @@ use ncaa_api::{Game, GameDetail, Tournament};
 pub enum NetworkRequest {
     LoadBracket,
     RefreshScores,
-    LoadGameDetail { game_id: String },
+    LoadGameDetail {
+        bracket_id: String,
+        /// ESPN event ID used to call fetch_game_detail. None pre-Selection Sunday
+        /// for NCAA-sourced games; game detail is skipped gracefully when absent.
+        espn_id: Option<String>,
+    },
 }
 
 #[derive(Debug)]

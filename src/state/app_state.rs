@@ -102,8 +102,9 @@ impl BracketState {
         }
     }
 
-    /// Return the game ID of the currently selected game, if any.
-    pub fn selected_game_id(&self) -> Option<String> {
+    /// Return the (bracket_id, espn_id) of the currently selected game, if any.
+    /// `espn_id` is None for NCAA-sourced games before the team-matching bridge fires.
+    pub fn selected_game_id(&self) -> Option<(String, Option<String>)> {
         let tournament = self.tournament.as_ref()?;
         let region = if self.view_round.is_final_four() {
             tournament.regions.iter().find(|r| r.name == "National")?
@@ -114,7 +115,7 @@ impl BracketState {
             .rounds
             .iter()
             .find(|r| r.kind == self.view_round)?;
-        round.games.get(self.selected_game).map(|g| g.id.clone())
+        round.games.get(self.selected_game).map(|g| (g.id.clone(), g.espn_id.clone()))
     }
 
     fn games_in_view(&self) -> usize {

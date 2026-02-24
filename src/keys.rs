@@ -101,10 +101,10 @@ pub async fn handle_key_bindings(
             refresh_live_feed = true;
         }
         (MenuItem::Bracket, KeyCode::Enter, _) => {
-            if let Some(game_id) = guard.bracket_select_game() {
+            if let Some((bracket_id, espn_id)) = guard.bracket_select_game() {
                 drop(guard);
                 let _ = network_requests
-                    .send(NetworkRequest::LoadGameDetail { game_id })
+                    .send(NetworkRequest::LoadGameDetail { bracket_id, espn_id })
                     .await;
                 return;
             }
@@ -168,10 +168,10 @@ pub async fn handle_key_bindings(
             refresh_live_feed = true;
         }
         (MenuItem::Scoreboard, KeyCode::Enter, _) => {
-            if let Some(game_id) = guard.bracket_select_game() {
+            if let Some((bracket_id, espn_id)) = guard.bracket_select_game() {
                 drop(guard);
                 let _ = network_requests
-                    .send(NetworkRequest::LoadGameDetail { game_id })
+                    .send(NetworkRequest::LoadGameDetail { bracket_id, espn_id })
                     .await;
                 return;
             }
@@ -185,11 +185,11 @@ pub async fn handle_key_bindings(
     }
 
     if refresh_live_feed
-        && let Some(game_id) = guard.selected_game_id()
+        && let Some((bracket_id, espn_id)) = guard.selected_game_id()
     {
         drop(guard);
         let _ = network_requests
-            .send(NetworkRequest::LoadGameDetail { game_id })
+            .send(NetworkRequest::LoadGameDetail { bracket_id, espn_id })
             .await;
     }
 }

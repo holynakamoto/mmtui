@@ -237,9 +237,9 @@ async fn handle_network_response(
             guard.on_bracket_loaded(tournament);
             let selected_game = guard.selected_game_id();
             drop(guard);
-            if let Some(game_id) = selected_game {
+            if let Some((bracket_id, espn_id)) = selected_game {
                 let _ = network_requests
-                    .send(NetworkRequest::LoadGameDetail { game_id })
+                    .send(NetworkRequest::LoadGameDetail { bracket_id, espn_id })
                     .await;
             }
         }
@@ -248,9 +248,9 @@ async fn handle_network_response(
             guard.on_scores_updated(games);
             let selected_game = guard.selected_game_id();
             drop(guard);
-            if let Some(game_id) = selected_game {
+            if let Some((bracket_id, espn_id)) = selected_game {
                 let _ = network_requests
-                    .send(NetworkRequest::LoadGameDetail { game_id })
+                    .send(NetworkRequest::LoadGameDetail { bracket_id, espn_id })
                     .await;
             }
         }

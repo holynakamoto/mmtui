@@ -129,14 +129,15 @@ impl App {
         self.state.bracket.cycle_region();
     }
 
-    /// Returns the game ID to load if the user pressed Enter on a game.
-    pub fn bracket_select_game(&mut self) -> Option<String> {
-        let game_id = self.state.bracket.selected_game_id()?;
+    /// Returns (bracket_id, espn_id) if the user pressed Enter on a game.
+    /// Switches to the GameDetail tab as a side-effect.
+    pub fn bracket_select_game(&mut self) -> Option<(String, Option<String>)> {
+        let ids = self.state.bracket.selected_game_id()?;
         self.update_tab(MenuItem::GameDetail);
-        Some(game_id)
+        Some(ids)
     }
 
-    pub fn selected_game_id(&self) -> Option<String> {
+    pub fn selected_game_id(&self) -> Option<(String, Option<String>)> {
         self.state.bracket.selected_game_id()
     }
 
