@@ -3,7 +3,7 @@ use crate::{
     BoxScore, Game, GameDetail, GameStatus, Play, PlayerLine, Region, Round, RoundKind, Team,
     TeamSeed, Tournament,
 };
-use chrono::{Datelike, Utc};
+use chrono::{DateTime, Datelike, Utc};
 use reqwest::Client;
 use std::fmt;
 use std::time::Duration;
@@ -72,13 +72,13 @@ impl NcaaApi {
             let raw: TournamentsResponse = serde_json::from_str(&content)
                 .map_err(|e| ApiError::NotFound(format!("invalid tournament json at {path}: {e}")))?;
 
-            let year = infer_year_from_path(&path).unwrap_or_else(|| Utc::now().year() as u16);
+            let year =
+                infer_year_from_path(&path).unwrap_or_else(|| season_tournament_year(Utc::now()) as u16);
             let entry = select_tournament_entry(raw.tournaments.unwrap_or_default(), i32::from(year))?;
             return Ok(map_tournament(entry, year));
         }
 
-        let current_year = Utc::now().year();
-        let candidate_years = [current_year, current_year - 1, current_year + 1];
+        let candidate_years = candidate_tournament_years(Utc::now());
 
         let mut last_error: Option<ApiError> = None;
         for year in candidate_years {
@@ -159,6 +159,26 @@ fn infer_year_from_path(path: &str) -> Option<u16> {
         .filter(|y| (2000..=2100).contains(y))
 }
 
+fn season_tournament_year(now: DateTime<Utc>) -> i32 {
+    // NCAA tournament championship year tracks the season year. In Nov/Dec,
+    // queries should target the next calendar year.
+    if now.month() >= 11 { now.year() + 1 } else { now.year() }
+}
+
+fn candidate_tournament_years(now: DateTime<Utc>) -> Vec<i32> {
+    let season_year = season_tournament_year(now);
+    let mut years = vec![season_year, season_year - 1, season_year + 1, 2025];
+    years.sort_unstable();
+    years.dedup();
+    years.sort_by(|a, b| {
+        (a - season_year)
+            .abs()
+            .cmp(&(b - season_year).abs())
+            .then_with(|| a.cmp(b))
+    });
+    years
+}
+
 fn select_tournament_entry(
     mut entries: Vec<crate::espn::TournamentEntry>,
     year: i32,
@@ -198,6 +218,38 @@ fn select_tournament_entry(
     Err(ApiError::NotFound(format!(
         "NCAA tournament bracket not found for year {year}"
     )))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    #[test]
+    fn season_year_uses_current_year_before_november() {
+        let dt = Utc.with_ymd_and_hms(2026, 2, 24, 12, 0, 0).unwrap();
+        assert_eq!(season_tournament_year(dt), 2026);
+    }
+
+    #[test]
+    fn season_year_rolls_forward_in_november_and_december() {
+        let nov = Utc.with_ymd_and_hms(2026, 11, 1, 0, 0, 0).unwrap();
+        let dec = Utc.with_ymd_and_hms(2026, 12, 31, 23, 59, 59).unwrap();
+        assert_eq!(season_tournament_year(nov), 2027);
+        assert_eq!(season_tournament_year(dec), 2027);
+    }
+
+    #[test]
+    fn candidate_years_are_nearest_first() {
+        let dt = Utc.with_ymd_and_hms(2026, 2, 24, 12, 0, 0).unwrap();
+        assert_eq!(candidate_tournament_years(dt), vec![2026, 2025, 2027]);
+    }
+
+    #[test]
+    fn candidate_years_always_include_2025_snapshot_fallback() {
+        let dt = Utc.with_ymd_and_hms(2027, 2, 24, 12, 0, 0).unwrap();
+        assert!(candidate_tournament_years(dt).contains(&2025));
+    }
 }
 
 fn to_title_case(s: &str) -> String {

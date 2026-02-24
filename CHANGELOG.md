@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update Rust to 1.93
 - Update `ratatui` to 0.30.0
 
+### Fixed
+
+- Improve tournament year selection and include a `2025` fallback to avoid
+  empty future-year bracket loads during offseason/preseason.
+
 ## [0.0.19] - 2025-07-30
 
 ### Fixed
