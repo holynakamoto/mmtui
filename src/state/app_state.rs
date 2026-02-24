@@ -294,10 +294,17 @@ impl ChatState {
     }
 
     pub fn push_system(&mut self, body: impl Into<String>) {
+        let body = body.into();
+        if let Some(last) = self.messages.last()
+            && last.is_system
+            && last.body == body
+        {
+            return;
+        }
         self.messages.push(ChatMessage {
             id: format!("system-{}", Local::now().timestamp_millis()),
             author: "system".to_string(),
-            body: body.into(),
+            body,
             timestamp: Local::now().format("%H:%M").to_string(),
             is_system: true,
         });

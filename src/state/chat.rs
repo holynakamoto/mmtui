@@ -39,9 +39,13 @@ pub struct ChatWorker {
 impl ChatWorker {
     pub async fn run(mut self) {
         let mut pending: Vec<ChatCommand> = Vec::new();
+        let mut retry_delay_secs: u64 = 2;
         loop {
+            let mut established_connection = false;
             match connect_async(self.url.as_str()).await {
                 Ok((stream, _)) => {
+                    established_connection = true;
+                    retry_delay_secs = 2;
                     let _ = self.events.send(ChatEvent::Connected).await;
                     let (mut write, mut read) = stream.split();
 
@@ -108,7 +112,12 @@ impl ChatWorker {
                     Err(tokio::sync::mpsc::error::TryRecvError::Disconnected) => return,
                 }
             }
-            sleep(Duration::from_secs(2)).await;
+            sleep(Duration::from_secs(retry_delay_secs)).await;
+            if !established_connection {
+                retry_delay_secs = (retry_delay_secs * 2).min(30);
+            } else {
+                retry_delay_secs = 2;
+            }
         }
     }
 }
