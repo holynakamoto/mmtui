@@ -109,8 +109,10 @@ MMTUI_CHAT_ROOM=your-room MMTUI_CHAT_WS=ws://YOUR_SERVER:8787 mmtui
 - `1` / `2` / `3`: Bracket / Scoreboard / Game Detail tabs
 - `4`: Chat tab
 - `5`: Pick Wizard tab (2025 template)
+- `6`: Compare tab (leaderboard from picks files/links)
 - Chat controls: `i` or `Enter` to compose, `Enter` to send, `Esc` to cancel
 - Pick Wizard: `1`/`2` pick winner, `j`/`k` next/prev matchup, `s` save picks
+- Compare: `r` reload sources, `j`/`k` scroll leaderboard
 - `?`: Help
 - `Esc`: back from Help or Game Detail
 - `f`: toggle fullscreen
@@ -125,6 +127,22 @@ Pick Wizard currently uses the 2025 bracket template and writes your selections 
 ```
 
 (`$XDG_CONFIG_HOME/mmtui/picks_2025.json` if `XDG_CONFIG_HOME` is set.)
+
+## Compare Sources
+
+Compare tab loads picks from:
+
+```text
+~/.config/mmtui/picks_2025.json
+~/.config/mmtui/compare/*.json
+```
+
+And optional additional sources via environment variable (file paths or HTTP(S)
+links, comma-separated):
+
+```bash
+MMTUI_COMPARE_SOURCES="https://example.com/alice.json,/tmp/bob.json" mmtui
+```
 
 ## Release Executable
 

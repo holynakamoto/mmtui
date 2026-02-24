@@ -13,7 +13,14 @@ use crate::state::network::{ERROR_CHAR, LoadingState};
 use crate::ui::layout::LayoutAreas;
 use ncaa_api::{Game, GameStatus, Round, RoundKind, TeamSeed};
 
-static TABS: &[&str; 5] = &["Bracket", "Scoreboard", "Game Detail", "Chat", "Pick Wizard"];
+static TABS: &[&str; 6] = &[
+    "Bracket",
+    "Scoreboard",
+    "Game Detail",
+    "Chat",
+    "Pick Wizard",
+    "Compare",
+];
 
 pub fn draw<B>(terminal: &mut Terminal<B>, app: &mut App, loading: LoadingState)
 where
@@ -45,10 +52,11 @@ where
                 MenuItem::GameDetail => draw_game_detail(f, layout.main, app),
                 MenuItem::Chat => draw_chat(f, layout.main, app),
                 MenuItem::PickWizard => draw_pick_wizard(f, layout.main, app),
+                MenuItem::Compare => draw_compare(f, layout.main, app),
                 MenuItem::Help => draw_placeholder(
                     f,
                     layout.main,
-                    "Help: q=quit  1=Bracket  2=Scoreboard  3=GameDetail  4=Chat  5=Wizard  ←/→=round  ↑/↓=game  Enter=select  r=region",
+                    "Help: q=quit  1=Bracket 2=Scoreboard 3=GameDetail 4=Chat 5=Wizard 6=Compare  ←/→=round ↑/↓=game Enter=select r=region",
                 ),
             }
 
@@ -104,6 +112,7 @@ fn draw_tabs(f: &mut Frame, tab_bar: [Rect; 2], app: &App) {
         MenuItem::GameDetail => 2,
         MenuItem::Chat => 3,
         MenuItem::PickWizard => 4,
+        MenuItem::Compare => 5,
         MenuItem::Help => 0,
     };
 
@@ -860,6 +869,58 @@ fn draw_pick_wizard(f: &mut Frame, area: Rect, app: &App) {
                 },
             ),
         ]));
+    }
+
+    f.render_widget(Paragraph::new(lines), inner);
+}
+
+fn draw_compare(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::White).title(" Compare ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    let mut lines = Vec::new();
+    let loaded = app
+        .state
+        .compare
+        .last_loaded_at
+        .clone()
+        .unwrap_or_else(|| "-".to_string());
+    lines.push(Line::from(format!(
+        "Loaded: {loaded}  |  Entries: {}  |  r=reload j/k=scroll",
+        app.state.compare.rows.len()
+    )));
+    lines.push(Line::from(
+        "Rank  User                 Pts/Max  Correct  Source",
+    ));
+    lines.push(Line::from(
+        "------------------------------------------------------",
+    ));
+
+    let offset = app.state.compare.scroll_offset as usize;
+    for (idx, row) in app.state.compare.rows.iter().enumerate().skip(offset) {
+        if lines.len() >= inner.height as usize {
+            break;
+        }
+        let source_short: String = row.source.chars().take(26).collect();
+        lines.push(Line::from(format!(
+            "{:>2}. {:<20} {:>3}/{:<3}   {:>3}/{:<3}  {}",
+            idx + 1,
+            row.user_id.chars().take(20).collect::<String>(),
+            row.points,
+            row.max_points,
+            row.correct,
+            row.total,
+            source_short
+        )));
+    }
+
+    if lines.len() + 1 < inner.height as usize && !app.state.compare.source_errors.is_empty() {
+        lines.push(Line::from(""));
+        lines.push(Line::from(Span::styled(
+            format!("Source errors: {}", app.state.compare.source_errors.len()),
+            Style::default().fg(Color::DarkGray),
+        )));
     }
 
     f.render_widget(Paragraph::new(lines), inner);

@@ -1,7 +1,8 @@
 use crate::state::app_settings::AppSettings;
-use crate::state::app_state::{AppState, BracketPicks, ChatMessage};
+use crate::state::app_state::{AppState, BracketPicks, ChatMessage, CompareRow};
 use crate::state::chat::ChatWireMessage;
-use ncaa_api::{Game, GameDetail, Tournament};
+use chrono::Local;
+use ncaa_api::{Game, GameDetail, GameStatus, RoundKind, Tournament};
 use std::path::PathBuf;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
@@ -12,6 +13,7 @@ pub enum MenuItem {
     GameDetail,
     Chat,
     PickWizard,
+    Compare,
     Help,
 }
 
@@ -78,6 +80,9 @@ impl App {
         }
         if self.state.active_tab == MenuItem::PickWizard {
             self.start_pick_wizard();
+        }
+        if self.state.active_tab == MenuItem::Compare {
+            self.load_compare_sources();
         }
     }
 
@@ -223,6 +228,78 @@ impl App {
         serde_json::from_str::<BracketPicks>(&content)
             .map_err(|e| format!("parse picks failed: {e}"))
     }
+
+    pub fn load_compare_sources(&mut self) {
+        let Some(tournament) = self.state.bracket.tournament.as_ref() else {
+            self.state.last_error = Some("Compare needs bracket data".to_string());
+            return;
+        };
+
+        let mut loaded: Vec<(String, BracketPicks)> = Vec::new();
+        let mut source_errors = Vec::new();
+
+        for source in self.compare_sources() {
+            match load_picks_source(&source) {
+                Ok(picks) => loaded.push((source, picks)),
+                Err(e) => source_errors.push(e),
+            }
+        }
+
+        let mut rows = Vec::new();
+        for (source, picks) in loaded {
+            rows.push(score_picks(tournament, &source, &picks));
+        }
+        rows.sort_by(|a, b| {
+            b.points
+                .cmp(&a.points)
+                .then_with(|| b.correct.cmp(&a.correct))
+                .then_with(|| a.user_id.cmp(&b.user_id))
+        });
+
+        self.state.compare.rows = rows;
+        self.state.compare.source_errors = source_errors;
+        self.state.compare.last_loaded_at = Some(Local::now().format("%H:%M").to_string());
+        self.state.compare.scroll_offset = 0;
+    }
+
+    pub fn compare_scroll_down(&mut self) {
+        let max = self.state.compare.rows.len().saturating_sub(1) as u16;
+        self.state.compare.scroll_offset = (self.state.compare.scroll_offset + 1).min(max);
+    }
+
+    pub fn compare_scroll_up(&mut self) {
+        self.state.compare.scroll_offset = self.state.compare.scroll_offset.saturating_sub(1);
+    }
+
+    fn compare_sources(&self) -> Vec<String> {
+        let mut out = Vec::new();
+        out.push(pick_wizard_path(2025).display().to_string());
+
+        if let Some(compare_dir) = pick_wizard_path(2025).parent().map(|p| p.join("compare"))
+            && let Ok(entries) = std::fs::read_dir(compare_dir)
+        {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.extension().and_then(|e| e.to_str()) == Some("json") {
+                    out.push(p.display().to_string());
+                }
+            }
+        }
+
+        if let Ok(extra) = std::env::var("MMTUI_COMPARE_SOURCES") {
+            out.extend(
+                extra
+                    .split(',')
+                    .map(str::trim)
+                    .filter(|s| !s.is_empty())
+                    .map(ToString::to_string),
+            );
+        }
+
+        out.sort();
+        out.dedup();
+        out
+    }
 }
 
 fn pick_wizard_path(year: u16) -> PathBuf {
@@ -240,4 +317,93 @@ fn pick_wizard_path(year: u16) -> PathBuf {
             .join(format!("picks_{year}.json"));
     }
     PathBuf::from(format!("picks_{year}.json"))
+}
+
+fn round_weight(round: RoundKind) -> u32 {
+    match round {
+        RoundKind::FirstFour => 1,
+        RoundKind::First => 1,
+        RoundKind::Second => 2,
+        RoundKind::Sweet16 => 4,
+        RoundKind::Elite8 => 8,
+        RoundKind::FinalFour => 16,
+        RoundKind::Championship => 32,
+    }
+}
+
+fn load_picks_source(source: &str) -> Result<BracketPicks, String> {
+    if source.starts_with("http://") || source.starts_with("https://") {
+        let body = reqwest::blocking::get(source)
+            .map_err(|e| format!("{source}: fetch failed: {e}"))?
+            .text()
+            .map_err(|e| format!("{source}: read body failed: {e}"))?;
+        serde_json::from_str(&body).map_err(|e| format!("{source}: invalid picks json: {e}"))
+    } else {
+        let content = std::fs::read_to_string(source)
+            .map_err(|e| format!("{source}: read failed: {e}"))?;
+        serde_json::from_str(&content).map_err(|e| format!("{source}: invalid picks json: {e}"))
+    }
+}
+
+fn score_picks(tournament: &Tournament, source: &str, picks: &BracketPicks) -> CompareRow {
+    let mut points = 0u32;
+    let mut max_points = 0u32;
+    let mut correct = 0u32;
+    let mut total = 0u32;
+
+    for region in &tournament.regions {
+        for round in &region.rounds {
+            for game in &round.games {
+                let Some(selection) = picks.selections.get(&game.id) else {
+                    continue;
+                };
+                total += 1;
+                let weight = round_weight(round.kind);
+                let winner_side = if game.winner_id.as_ref() == game.top.team.as_ref().map(|t| &t.id) {
+                    Some("top")
+                } else if game.winner_id.as_ref() == game.bottom.team.as_ref().map(|t| &t.id) {
+                    Some("bottom")
+                } else {
+                    None
+                };
+
+                let picked_correct = match game.status {
+                    GameStatus::Final => {
+                        let is_team_match = game.winner_id.as_deref() == Some(selection.as_str());
+                        let is_side_match = selection == &format!("top:{}", game.id)
+                            && winner_side == Some("top")
+                            || selection == &format!("bottom:{}", game.id)
+                                && winner_side == Some("bottom");
+                        is_team_match || is_side_match
+                    }
+                    _ => false,
+                };
+
+                if picked_correct {
+                    correct += 1;
+                    points += weight;
+                }
+
+                match game.status {
+                    GameStatus::Final => {
+                        if picked_correct {
+                            max_points += weight;
+                        }
+                    }
+                    _ => {
+                        max_points += weight;
+                    }
+                }
+            }
+        }
+    }
+
+    CompareRow {
+        user_id: picks.user_id.clone(),
+        source: source.to_string(),
+        points,
+        max_points,
+        correct,
+        total,
+    }
 }

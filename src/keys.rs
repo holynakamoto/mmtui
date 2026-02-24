@@ -75,6 +75,7 @@ pub async fn handle_key_bindings(
         (_, Char('3'), _) => guard.update_tab(MenuItem::GameDetail),
         (_, Char('4'), _) => guard.update_tab(MenuItem::Chat),
         (_, Char('5'), _) => guard.update_tab(MenuItem::PickWizard),
+        (_, Char('6'), _) => guard.update_tab(MenuItem::Compare),
         (_, Char('?'), _) => guard.update_tab(MenuItem::Help),
         (MenuItem::Help, KeyCode::Esc, _) => guard.exit_help(),
 
@@ -146,6 +147,12 @@ pub async fn handle_key_bindings(
             }
         }
         (MenuItem::PickWizard, KeyCode::Esc, _) => guard.update_tab(MenuItem::Bracket),
+
+        // Compare
+        (MenuItem::Compare, Char('r'), _) => guard.load_compare_sources(),
+        (MenuItem::Compare, Char('j') | KeyCode::Down, _) => guard.compare_scroll_down(),
+        (MenuItem::Compare, Char('k') | KeyCode::Up, _) => guard.compare_scroll_up(),
+        (MenuItem::Compare, KeyCode::Esc, _) => guard.update_tab(MenuItem::Bracket),
 
         // Scoreboard navigation
         (MenuItem::Scoreboard, Char('j') | KeyCode::Down, _) => {

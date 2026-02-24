@@ -532,6 +532,28 @@ fn format_seed_team(seed: &TeamSeed) -> String {
 }
 
 // ---------------------------------------------------------------------------
+// Compare state (leaderboard across bracket pick files/links)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Default)]
+pub struct CompareRow {
+    pub user_id: String,
+    pub source: String,
+    pub points: u32,
+    pub max_points: u32,
+    pub correct: u32,
+    pub total: u32,
+}
+
+#[derive(Debug, Default)]
+pub struct CompareState {
+    pub rows: Vec<CompareRow>,
+    pub last_loaded_at: Option<String>,
+    pub source_errors: Vec<String>,
+    pub scroll_offset: u16,
+}
+
+// ---------------------------------------------------------------------------
 // Root app state
 // ---------------------------------------------------------------------------
 
@@ -547,6 +569,7 @@ pub struct AppState {
     pub live_feed: LiveFeedState,
     pub chat: ChatState,
     pub pick_wizard: PickWizardState,
+    pub compare: CompareState,
     pub animation: AnimationState,
 }
 
