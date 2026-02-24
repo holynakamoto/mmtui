@@ -40,6 +40,7 @@ impl App {
     pub fn on_bracket_loaded(&mut self, tournament: Tournament) {
         self.state.last_error = None;
         self.state.bracket.load(tournament);
+        self.state.live_feed = Default::default();
     }
 
     pub fn on_scores_updated(&mut self, games: Vec<Game>) {
@@ -48,8 +49,14 @@ impl App {
 
     pub fn on_game_detail_loaded(&mut self, detail: GameDetail) {
         self.state.last_error = None;
+        let previous_game_id = self.state.game_detail.detail.as_ref().map(|d| d.game_id.clone());
+        let game_changed = previous_game_id.as_deref() != Some(detail.game_id.as_str());
+
+        self.state.live_feed.update_from_detail(&detail);
         self.state.game_detail.detail = Some(detail);
-        self.state.game_detail.scroll_offset = 0;
+        if game_changed {
+            self.state.game_detail.scroll_offset = 0;
+        }
     }
 
     // -----------------------------------------------------------------------
@@ -111,6 +118,10 @@ impl App {
         let game_id = self.state.bracket.selected_game_id()?;
         self.update_tab(MenuItem::GameDetail);
         Some(game_id)
+    }
+
+    pub fn selected_game_id(&self) -> Option<String> {
+        self.state.bracket.selected_game_id()
     }
 
     // -----------------------------------------------------------------------

@@ -1,7 +1,7 @@
 use tui::backend::Backend;
 use tui::layout::{Alignment, Constraint, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
-use tui::text::Line;
+use tui::text::{Line, Span};
 use tui::widgets::{Block, BorderType, Borders, Clear, Paragraph, Tabs};
 use tui::{Frame, Terminal};
 
@@ -175,12 +175,29 @@ fn draw_bracket(f: &mut Frame, area: Rect, app: &App) {
         key_legend,
     );
 
+    let mut bracket_area = content;
+    let mut live_feed_area: Option<Rect> = None;
+    if content.width >= 90 {
+        let [left, right] =
+            Layout::horizontal([Constraint::Percentage(68), Constraint::Percentage(32)]).areas(content);
+        bracket_area = left;
+        live_feed_area = Some(right);
+    } else if content.height >= 16 {
+        let [top, bottom] = Layout::vertical([Constraint::Fill(1), Constraint::Length(7)]).areas(content);
+        bracket_area = top;
+        live_feed_area = Some(bottom);
+    }
+
     if app.state.bracket.view_round == RoundKind::Championship {
-        draw_championship_view(f, content, tournament);
+        draw_championship_view(f, bracket_area, tournament);
     } else if app.state.bracket.view_round.is_final_four() {
-        draw_final_four_view(f, content, tournament, app);
+        draw_final_four_view(f, bracket_area, tournament, app);
     } else {
-        draw_all_regions_view(f, content, tournament, app);
+        draw_all_regions_view(f, bracket_area, tournament, app);
+    }
+
+    if let Some(feed) = live_feed_area {
+        draw_live_feed(f, feed, app);
     }
 }
 
@@ -638,4 +655,57 @@ fn draw_loading_spinner(f: &mut Frame, area: Rect, app: &App, loading: LoadingSt
         Rect::new(area.width.saturating_sub(11), 1, 1, 1)
     };
     f.render_widget(spinner, area);
+}
+
+fn draw_live_feed(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::DarkGray).title(" Live Feed ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    if inner.width == 0 || inner.height == 0 {
+        return;
+    }
+
+    let Some(game_id) = app.state.live_feed.game_id.as_deref() else {
+        f.render_widget(
+            Paragraph::new("Select a game to load live plays")
+                .style(Style::default().fg(Color::DarkGray))
+                .alignment(Alignment::Center),
+            inner,
+        );
+        return;
+    };
+
+    if app.state.live_feed.plays.is_empty() {
+        f.render_widget(
+            Paragraph::new(format!("Game {game_id}\nNo plays yet"))
+                .style(Style::default().fg(Color::DarkGray)),
+            inner,
+        );
+        return;
+    }
+
+    let mut lines = Vec::new();
+    lines.push(Line::from(vec![
+        Span::styled("Game: ", Style::default().fg(Color::Gray)),
+        Span::raw(game_id),
+    ]));
+    lines.push(Line::from(""));
+
+    let max_plays = inner.height.saturating_sub(2) as usize;
+    for play in app.state.live_feed.plays.iter().rev().take(max_plays) {
+        let style = if play.is_new {
+            Style::default().fg(Color::Yellow)
+        } else {
+            Style::default().fg(Color::White)
+        };
+        let text = format!(
+            "{} P{} {}-{} {}",
+            play.clock, play.period, play.away_score, play.home_score, play.description
+        );
+        let clipped: String = text.chars().take(inner.width.saturating_sub(1) as usize).collect();
+        lines.push(Line::from(Span::styled(clipped, style)));
+    }
+
+    f.render_widget(Paragraph::new(lines), inner);
 }

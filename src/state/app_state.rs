@@ -1,5 +1,6 @@
 use crate::app::MenuItem;
 use ncaa_api::{GameDetail, RoundKind, Tournament};
+use std::collections::HashSet;
 
 // ---------------------------------------------------------------------------
 // Banner animation state
@@ -188,6 +189,57 @@ pub struct GameDetailState {
 }
 
 // ---------------------------------------------------------------------------
+// Live feed state (lightweight recent play-by-play view)
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Clone, Default)]
+pub struct LivePlay {
+    pub period: u8,
+    pub clock: String,
+    pub description: String,
+    pub away_score: u16,
+    pub home_score: u16,
+    pub is_new: bool,
+}
+
+#[derive(Debug, Default)]
+pub struct LiveFeedState {
+    pub game_id: Option<String>,
+    pub plays: Vec<LivePlay>,
+}
+
+impl LiveFeedState {
+    pub fn update_from_detail(&mut self, detail: &GameDetail) {
+        let prev_keys: HashSet<String> = self
+            .plays
+            .iter()
+            .map(|p| play_key(p.period, &p.clock, &p.description, p.away_score, p.home_score))
+            .collect();
+
+        self.game_id = Some(detail.game_id.clone());
+        self.plays = detail
+            .plays
+            .iter()
+            .map(|p| {
+                let key = play_key(p.period, &p.clock, &p.description, p.away_score, p.home_score);
+                LivePlay {
+                    period: p.period,
+                    clock: p.clock.clone(),
+                    description: p.description.clone(),
+                    away_score: p.away_score,
+                    home_score: p.home_score,
+                    is_new: !prev_keys.contains(&key),
+                }
+            })
+            .collect();
+    }
+}
+
+fn play_key(period: u8, clock: &str, desc: &str, away: u16, home: u16) -> String {
+    format!("{period}|{clock}|{away}|{home}|{desc}")
+}
+
+// ---------------------------------------------------------------------------
 // Root app state
 // ---------------------------------------------------------------------------
 
@@ -200,6 +252,7 @@ pub struct AppState {
     pub last_error: Option<String>,
     pub bracket: BracketState,
     pub game_detail: GameDetailState,
+    pub live_feed: LiveFeedState,
     pub animation: AnimationState,
 }
 

@@ -133,7 +133,7 @@ async fn main_ui_loop(
 
             Some(response) = network_responses.recv() => {
                 let should_redraw =
-                    handle_network_response(response, &app, &mut loading).await;
+                    handle_network_response(response, &app, &network_requests, &mut loading).await;
                 if should_redraw {
                     let mut app_guard = app.lock().await;
                     draw::draw(&mut terminal, &mut app_guard, loading);
@@ -169,6 +169,7 @@ async fn handle_ui_event(
 async fn handle_network_response(
     response: NetworkResponse,
     app: &Arc<Mutex<App>>,
+    network_requests: &mpsc::Sender<NetworkRequest>,
     loading: &mut LoadingState,
 ) -> bool {
     match response {
@@ -179,10 +180,24 @@ async fn handle_network_response(
         NetworkResponse::BracketLoaded { tournament } => {
             let mut guard = app.lock().await;
             guard.on_bracket_loaded(tournament);
+            let selected_game = guard.selected_game_id();
+            drop(guard);
+            if let Some(game_id) = selected_game {
+                let _ = network_requests
+                    .send(NetworkRequest::LoadGameDetail { game_id })
+                    .await;
+            }
         }
         NetworkResponse::BracketUpdated { games } => {
             let mut guard = app.lock().await;
             guard.on_scores_updated(games);
+            let selected_game = guard.selected_game_id();
+            drop(guard);
+            if let Some(game_id) = selected_game {
+                let _ = network_requests
+                    .send(NetworkRequest::LoadGameDetail { game_id })
+                    .await;
+            }
         }
         NetworkResponse::GameDetailLoaded { detail } => {
             let mut guard = app.lock().await;
