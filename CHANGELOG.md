@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the selected game and highlights newly arrived plays.
 - Add global chat over WebSocket with reconnecting client support and a
   `chat-relay` server binary for cross-geography chat rooms.
+- Add a new 2025 Pick Wizard tab with guided winner selection and local
+  persistence to `~/.config/mmtui/picks_2025.json`.
 
 ### Fixed
 
