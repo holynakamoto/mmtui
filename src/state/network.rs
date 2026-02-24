@@ -48,8 +48,8 @@ impl NetworkWorker {
             let result = match request {
                 NetworkRequest::LoadBracket => self.handle_load_bracket().await,
                 NetworkRequest::RefreshScores => self.handle_refresh_scores().await,
-                NetworkRequest::LoadGameDetail { game_id } => {
-                    self.handle_load_game_detail(game_id).await
+                NetworkRequest::LoadGameDetail { bracket_id, espn_id } => {
+                    self.handle_load_game_detail(bracket_id, espn_id).await
                 }
             };
 
@@ -81,10 +81,17 @@ impl NetworkWorker {
 
     async fn handle_load_game_detail(
         &self,
-        game_id: String,
+        bracket_id: String,
+        espn_id: Option<String>,
     ) -> Result<NetworkResponse, ncaa_api::client::ApiError> {
-        debug!("loading game detail for {game_id}");
-        let detail = self.client.fetch_game_detail(&game_id).await?;
+        let Some(eid) = espn_id else {
+            debug!("game detail unavailable for bracket pos {bracket_id}: no ESPN ID yet (pre-Selection Sunday)");
+            return Ok(NetworkResponse::Error {
+                message: "Game detail not yet available — check back after Selection Sunday.".into(),
+            });
+        };
+        debug!("loading game detail for bracket pos {bracket_id} (espn {eid})");
+        let detail = self.client.fetch_game_detail(&eid).await?;
         Ok(NetworkResponse::GameDetailLoaded { detail })
     }
 

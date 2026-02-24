@@ -1,4 +1,5 @@
 use crate::espn::{ScoreboardResponse, SummaryResponse, TournamentsResponse};
+use crate::henrygd::HenrygdResponse;
 use crate::{
     BoxScore, Game, GameDetail, GameStatus, Play, PlayerLine, Region, Round, RoundKind, Team,
     TeamSeed, Tournament,
@@ -14,6 +15,7 @@ const ESPN_SITE_V2: &str =
     "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball";
 const ESPN_V2: &str =
     "https://site.api.espn.com/apis/v2/sports/basketball/mens-college-basketball";
+const NCAA_HENRYGD: &str = "https://ncaa-api.henrygd.me";
 const FALLBACK_BRACKET_YEAR: i32 = 2025;
 const FALLBACK_BRACKET_JSON: &str = include_str!("../../2025_bracket.json");
 
@@ -62,9 +64,11 @@ impl NcaaApi {
 
     /// Fetch the current NCAA Men's Basketball Tournament bracket.
     ///
-    /// Fallbacks:
-    /// 1) If `MMTUI_BRACKET_JSON` is set, load from local JSON file.
-    /// 2) Otherwise query ESPN for current year, then adjacent years.
+    /// Fallback chain:
+    /// 1) `MMTUI_BRACKET_JSON` env var — load from local ESPN-format JSON file.
+    /// 2) NCAA henrygd API — authoritative bracket topology for current year.
+    /// 3) ESPN tournaments API — bracket data for current and adjacent years.
+    /// 4) Embedded 2025 JSON — last-resort offline fallback.
     pub async fn fetch_tournament(&self) -> ApiResult<Tournament> {
         if let Ok(path) = std::env::var("MMTUI_BRACKET_JSON")
             && !path.trim().is_empty()
@@ -80,8 +84,20 @@ impl NcaaApi {
             return Ok(map_tournament(entry, year));
         }
 
-        let candidate_years = candidate_tournament_years(Utc::now());
+        let season_year = season_tournament_year(Utc::now()) as u16;
 
+        // NCAA henrygd: authoritative bracket topology.
+        let ncaa_url = format!("{NCAA_HENRYGD}/brackets/basketball-men/d1/{season_year}");
+        if let Ok(raw) = self.get::<HenrygdResponse>(&ncaa_url).await {
+            if let Some(champ) = raw.championships.into_iter().next() {
+                if !champ.games.is_empty() {
+                    return Ok(map_ncaa_championship(champ));
+                }
+            }
+        }
+
+        // ESPN fallback: bracket data for current and adjacent years.
+        let candidate_years = candidate_tournament_years(Utc::now());
         let mut last_error: Option<ApiError> = None;
         for year in candidate_years {
             let url = format!("{ESPN_V2}/tournaments?limit=25&year={year}");
@@ -101,6 +117,19 @@ impl NcaaApi {
         Err(last_error.unwrap_or_else(|| {
             ApiError::NotFound("NCAA Tournament not found in current/adjacent years".into())
         }))
+    }
+
+    /// Fetch the bracket skeleton from the NCAA henrygd API for a specific year.
+    /// Useful for pre-loading the 2026 bracket structure before Selection Sunday.
+    pub async fn fetch_ncaa_bracket(&self, year: u16) -> ApiResult<Tournament> {
+        let url = format!("{NCAA_HENRYGD}/brackets/basketball-men/d1/{year}");
+        let raw = self.get::<HenrygdResponse>(&url).await?;
+        let champ = raw
+            .championships
+            .into_iter()
+            .next()
+            .ok_or_else(|| ApiError::NotFound(format!("no championship data for {year}")))?;
+        Ok(map_ncaa_championship(champ))
     }
 
     /// Fetch live scores for games currently in the NCAA tournament.
@@ -147,6 +176,155 @@ impl NcaaApi {
             }
         }
     }
+}
+
+// ---------------------------------------------------------------------------
+// Mapping: NCAA henrygd wire types → clean domain types
+// ---------------------------------------------------------------------------
+
+/// Map a henrygd championship response into the mmtui Tournament domain type.
+///
+/// ID strategy:
+///   - `Game.id` = bracketPositionId string (stable bracket anchor)
+///   - `Game.espn_id` = None (populated later by team-matching bridge)
+///
+/// Region grouping: games are bucketed by sectionId. Region names come from
+/// the championship's `regions[]` array; fall back to "Region {n}" pre-Selection Sunday.
+fn map_ncaa_championship(champ: crate::henrygd::HenrygdChampionship) -> Tournament {
+    use std::collections::HashMap;
+
+    // Build sectionId → region name lookup; fall back to "Region {n}".
+    let region_names: HashMap<u32, String> = champ
+        .regions
+        .iter()
+        .map(|r| {
+            let name = if r.title.is_empty() {
+                format!("Region {}", r.section_id)
+            } else {
+                r.title.clone()
+            };
+            (r.section_id, name)
+        })
+        .collect();
+
+    // sectionId 6 is the National/Final Four section.
+    const NATIONAL_SECTION: u32 = 6;
+
+    // Group games by sectionId → RoundKind → Vec<Game>.
+    let mut sections: HashMap<u32, HashMap<RoundKind, Vec<Game>>> = HashMap::new();
+    for g in &champ.games {
+        let round_kind = round_number_to_kind(g.bracket_position_id / 100);
+        let game = map_ncaa_game(g);
+        sections
+            .entry(g.section_id)
+            .or_default()
+            .entry(round_kind)
+            .or_default()
+            .push(game);
+    }
+
+    // Build Region list. National section always last.
+    let region_order = ["East", "West", "South", "Midwest"];
+    let mut regions: Vec<Region> = Vec::new();
+
+    // Named regions first (in canonical order when known, otherwise insertion order).
+    let mut section_ids: Vec<u32> = sections.keys().copied().filter(|&s| s != NATIONAL_SECTION).collect();
+    section_ids.sort_unstable();
+
+    // Try to match canonical region order; fall back to sorted sectionId order.
+    let ordered_ids = {
+        let named: Vec<u32> = region_order
+            .iter()
+            .filter_map(|name| {
+                section_ids.iter().find(|&&sid| {
+                    region_names.get(&sid).map(|n| n.as_str()) == Some(name)
+                }).copied()
+            })
+            .collect();
+        if named.len() == section_ids.len() { named } else { section_ids }
+    };
+
+    for sid in ordered_ids {
+        if let Some(rounds_map) = sections.remove(&sid) {
+            let name = region_names.get(&sid).cloned().unwrap_or_else(|| format!("Region {sid}"));
+            regions.push(Region {
+                id: name.to_lowercase().replace(' ', "-"),
+                name,
+                rounds: build_rounds(rounds_map),
+            });
+        }
+    }
+
+    // National section (Final Four + Championship).
+    if let Some(rounds_map) = sections.remove(&NATIONAL_SECTION) {
+        regions.push(Region {
+            id: "national".into(),
+            name: "National".into(),
+            rounds: build_rounds(rounds_map),
+        });
+    }
+
+    Tournament {
+        id: format!("ncaa-{}", champ.year),
+        name: champ.title,
+        year: champ.year,
+        regions,
+    }
+}
+
+/// Sort a round map into a Vec<Round> ordered by RoundKind.
+fn build_rounds(rounds_map: std::collections::HashMap<RoundKind, Vec<Game>>) -> Vec<Round> {
+    let mut rounds: Vec<Round> = rounds_map
+        .into_iter()
+        .map(|(kind, games)| Round { kind, games })
+        .collect();
+    rounds.sort_by_key(|r| r.kind);
+    rounds
+}
+
+/// Map a single henrygd game to the mmtui Game domain type.
+fn map_ncaa_game(g: &crate::henrygd::HenrygdGame) -> Game {
+    let tba = || TeamSeed { seed: 0, team: None, placeholder: Some("TBA".into()) };
+    let top = g.teams.first().map(map_ncaa_team).unwrap_or_else(tba);
+    let bottom = g.teams.get(1).map(map_ncaa_team).unwrap_or_else(tba);
+
+    let winner_id = g.teams.iter().find(|t| t.winner == Some(true)).and_then(|t| t.team_id.clone());
+
+    let status = match g.game_state.as_str() {
+        "L" => GameStatus::InProgress,
+        "F" => GameStatus::Final,
+        _ => GameStatus::Scheduled,
+    };
+
+    Game {
+        id: g.bracket_position_id.to_string(),
+        espn_id: None, // Populated later by team-matching bridge.
+        top,
+        bottom,
+        status,
+        score: None, // henrygd bracket endpoint does not carry live scores.
+        winner_id,
+        period: None,
+        clock: None,
+        start_time: None,
+        location: None,
+    }
+}
+
+fn map_ncaa_team(t: &crate::henrygd::HenrygdTeam) -> TeamSeed {
+    let team = t.team_id.as_ref().map(|id| Team {
+        id: id.clone(),
+        name: t.name.clone().unwrap_or_default(),
+        short_name: t.short_name.clone().unwrap_or_else(|| t.name.clone().unwrap_or_default()),
+        abbrev: String::new(),
+        color: None,
+    });
+    let placeholder = if team.is_none() {
+        t.description.clone().or_else(|| Some("TBA".into()))
+    } else {
+        None
+    };
+    TeamSeed { seed: t.seed.unwrap_or(0), team, placeholder }
 }
 
 // ---------------------------------------------------------------------------
@@ -269,6 +447,152 @@ mod tests {
         let t = load_embedded_fallback_tournament().expect("fallback bracket should parse");
         assert_eq!(t.year, 2025);
         assert!(!t.regions.is_empty());
+    }
+
+    #[test]
+    fn test_round_number_mapping() {
+        assert_eq!(round_number_to_kind(1), RoundKind::FirstFour);
+        assert_eq!(round_number_to_kind(2), RoundKind::First);
+        assert_eq!(round_number_to_kind(6), RoundKind::FinalFour);
+        assert_eq!(round_number_to_kind(7), RoundKind::Championship);
+    }
+
+    #[test]
+    fn test_parse_status() {
+        assert_eq!(parse_status("STATUS_IN_PROGRESS"), GameStatus::InProgress);
+        assert_eq!(parse_status("STATUS_FINAL"), GameStatus::Final);
+        assert_eq!(parse_status("STATUS_SCHEDULED"), GameStatus::Scheduled);
+        assert_eq!(parse_status("STATUS_POSTPONED"), GameStatus::Postponed);
+    }
+
+    #[test]
+    fn test_round_kind_navigation() {
+        assert_eq!(RoundKind::First.next(), Some(RoundKind::Second));
+        assert_eq!(RoundKind::Championship.next(), None);
+        assert_eq!(RoundKind::FirstFour.prev(), None);
+        assert_eq!(RoundKind::FinalFour.is_final_four(), true);
+        assert_eq!(RoundKind::Elite8.is_final_four(), false);
+    }
+
+    // -----------------------------------------------------------------------
+    // NCAA henrygd adapter tests
+    // -----------------------------------------------------------------------
+
+    #[test]
+    fn ncaa_position_to_round_covers_all_rounds() {
+        assert_eq!(round_number_to_kind(101 / 100), RoundKind::FirstFour);
+        assert_eq!(round_number_to_kind(201 / 100), RoundKind::First);
+        assert_eq!(round_number_to_kind(301 / 100), RoundKind::Second);
+        assert_eq!(round_number_to_kind(401 / 100), RoundKind::Sweet16);
+        assert_eq!(round_number_to_kind(501 / 100), RoundKind::Elite8);
+        assert_eq!(round_number_to_kind(601 / 100), RoundKind::FinalFour);
+        assert_eq!(round_number_to_kind(701 / 100), RoundKind::Championship);
+    }
+
+    #[test]
+    fn ncaa_game_with_empty_teams_produces_tba_slots() {
+        let raw = crate::henrygd::HenrygdGame {
+            bracket_position_id: 101,
+            game_state: "P".into(),
+            teams: vec![],
+            section_id: 1,
+            ..Default::default()
+        };
+        let game = map_ncaa_game(&raw);
+        assert_eq!(game.id, "101");
+        assert!(game.espn_id.is_none(), "espn_id must be None pre-bridge");
+        assert!(game.top.team.is_none(), "top team should be None when teams is empty");
+        assert!(game.bottom.team.is_none(), "bottom team should be None when teams is empty");
+        assert_eq!(game.top.placeholder.as_deref(), Some("TBA"));
+        assert_eq!(game.status, GameStatus::Scheduled);
+    }
+
+    #[test]
+    fn ncaa_game_with_teams_maps_correctly() {
+        let raw = crate::henrygd::HenrygdGame {
+            bracket_position_id: 201,
+            game_state: "F".into(),
+            teams: vec![
+                crate::henrygd::HenrygdTeam {
+                    team_id: Some("uconn".into()),
+                    name: Some("Connecticut".into()),
+                    short_name: Some("UConn".into()),
+                    seed: Some(1),
+                    winner: Some(true),
+                    description: None,
+                },
+                crate::henrygd::HenrygdTeam {
+                    team_id: Some("stetson".into()),
+                    name: Some("Stetson".into()),
+                    short_name: None,
+                    seed: Some(16),
+                    winner: Some(false),
+                    description: None,
+                },
+            ],
+            section_id: 2,
+            ..Default::default()
+        };
+        let game = map_ncaa_game(&raw);
+        assert_eq!(game.id, "201");
+        assert_eq!(game.winner_id.as_deref(), Some("uconn"));
+        assert_eq!(game.top.seed, 1);
+        assert_eq!(game.bottom.seed, 16);
+        assert_eq!(game.status, GameStatus::Final);
+    }
+
+    #[test]
+    fn ncaa_championship_empty_region_titles_fall_back_to_region_n() {
+        use crate::henrygd::{HenrygdChampionship, HenrygdGame, HenrygdRegion};
+        let champ = HenrygdChampionship {
+            title: "2026 DI Men's Basketball Championship".into(),
+            year: 2026,
+            games: vec![HenrygdGame {
+                bracket_position_id: 201,
+                game_state: "P".into(),
+                section_id: 1,
+                ..Default::default()
+            }],
+            rounds: vec![],
+            regions: vec![HenrygdRegion {
+                id: "4031".into(),
+                section_id: 1,
+                title: String::new(), // empty pre-Selection Sunday
+                region_code: "TL".into(),
+            }],
+        };
+        let tournament = map_ncaa_championship(champ);
+        assert_eq!(tournament.year, 2026);
+        let region = tournament.regions.iter().find(|r| r.id != "national");
+        assert!(region.is_some());
+        assert!(
+            region.unwrap().name.starts_with("Region "),
+            "empty title should fall back to 'Region N', got: {}",
+            region.unwrap().name
+        );
+    }
+
+    #[test]
+    fn ncaa_championship_national_section_maps_to_national_region() {
+        use crate::henrygd::{HenrygdChampionship, HenrygdGame};
+        let champ = HenrygdChampionship {
+            title: "2026 Championship".into(),
+            year: 2026,
+            games: vec![HenrygdGame {
+                bracket_position_id: 701,
+                game_state: "P".into(),
+                section_id: 6,
+                ..Default::default()
+            }],
+            rounds: vec![],
+            regions: vec![],
+        };
+        let tournament = map_ncaa_championship(champ);
+        let national = tournament.regions.iter().find(|r| r.id == "national");
+        assert!(national.is_some(), "sectionId 6 must produce the National region");
+        let rounds = &national.unwrap().rounds;
+        assert_eq!(rounds.len(), 1);
+        assert_eq!(rounds[0].kind, RoundKind::Championship);
     }
 }
 
@@ -404,6 +728,7 @@ fn map_matchup(m: &crate::espn::EspnMatchup) -> Game {
     };
 
     Game {
+        espn_id: Some(id.clone()),
         id,
         top,
         bottom,
@@ -476,6 +801,7 @@ fn map_event_to_game(event: &crate::espn::EspnEvent) -> Game {
         .and_then(|c| c.id.clone());
 
     Game {
+        espn_id: Some(id.clone()),
         id,
         top: map_competitor(&top),
         bottom: map_competitor(&bottom),
@@ -669,36 +995,5 @@ fn parse_player_stats(name: String, stats: &[String], keys: &[String]) -> Player
         minutes: get("MIN"),
         fg: get("FG"),
         fg3: get("3PT"),
-    }
-}
-
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_round_number_mapping() {
-        assert_eq!(round_number_to_kind(1), RoundKind::FirstFour);
-        assert_eq!(round_number_to_kind(2), RoundKind::First);
-        assert_eq!(round_number_to_kind(6), RoundKind::FinalFour);
-        assert_eq!(round_number_to_kind(7), RoundKind::Championship);
-    }
-
-    #[test]
-    fn test_parse_status() {
-        assert_eq!(parse_status("STATUS_IN_PROGRESS"), GameStatus::InProgress);
-        assert_eq!(parse_status("STATUS_FINAL"), GameStatus::Final);
-        assert_eq!(parse_status("STATUS_SCHEDULED"), GameStatus::Scheduled);
-        assert_eq!(parse_status("STATUS_POSTPONED"), GameStatus::Postponed);
-    }
-
-    #[test]
-    fn test_round_kind_navigation() {
-        assert_eq!(RoundKind::First.next(), Some(RoundKind::Second));
-        assert_eq!(RoundKind::Championship.next(), None);
-        assert_eq!(RoundKind::FirstFour.prev(), None);
-        assert_eq!(RoundKind::FinalFour.is_final_four(), true);
-        assert_eq!(RoundKind::Elite8.is_final_four(), false);
     }
 }
