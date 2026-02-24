@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.8] - 2026-02-24
+
 ### Changed
 
 - Update Rust to 1.93
@@ -33,6 +35,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   reconnect backoff.
 - Fix chat compose input visibility in small terminals and clarify "`i` to
   type" guidance in the Chat panel/README.
+- Fix Compare tab Max Possible Points to correctly account for eliminated teams.
+  Previously, points for unplayed games were counted regardless of whether the
+  picked team had already lost. Now uses an elimination set built from Final game
+  results, so MPP drops immediately when a picked team is knocked out.
 
 ## [0.0.19] - 2025-07-30
 
