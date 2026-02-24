@@ -1,29 +1,213 @@
-use crate::app::{DebugState, MenuItem};
-use crate::components::schedule::ScheduleState;
-use crate::components::standings::StandingsState;
-use crate::components::stats::StatsState;
-use crate::state::boxscore::BoxscoreState;
-use crate::state::date_input::DateInput;
-use crate::state::gameday::GamedayState;
+use crate::app::MenuItem;
+use ncaa_api::{GameDetail, RoundKind, Tournament};
 
-/// A team must be either Home or Away.
-#[derive(Copy, Clone, Debug, Default, PartialEq)]
-pub enum HomeOrAway {
-    #[default]
-    Home = 0,
-    Away = 1,
+// ---------------------------------------------------------------------------
+// Banner animation state
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Default)]
+pub struct AnimationState {
+    /// Current frame index into the banner frames array, wraps at FRAME_COUNT.
+    pub frame: usize,
+    /// Monotonic tick counter — drives color cycling and the triangle-wave offset.
+    pub tick: u64,
 }
+
+impl AnimationState {
+    pub fn advance(&mut self, frame_count: usize) {
+        self.tick = self.tick.wrapping_add(1);
+        self.frame = (self.frame + 1) % frame_count;
+    }}
+
+// ---------------------------------------------------------------------------
+// Bracket / tournament state
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Default)]
+pub struct BracketState {
+    pub tournament: Option<Tournament>,
+    /// The "live" round — auto-detected as the last round with in-progress or
+    /// recently finished games. Drives the initial view on load.
+    pub current_round: RoundKind,
+    /// The round the user has navigated to (may differ from current_round).
+    pub view_round: RoundKind,
+    /// Selected region index (0–3). Ignored when view_round.is_final_four().
+    pub selected_region: usize,
+    /// Selected game index within the current region + round.
+    pub selected_game: usize,
+    /// Vertical scroll offset for when games exceed terminal height.
+    pub scroll_offset: u16,
+}
+
+impl BracketState {
+    /// Store a newly loaded tournament and auto-detect the active round.
+    pub fn load(&mut self, tournament: Tournament) {
+        self.current_round = detect_active_round(&tournament);
+        self.view_round = self.current_round;
+        self.selected_game = 0;
+        self.selected_region = 0;
+        self.scroll_offset = 0;
+        self.tournament = Some(tournament);
+    }
+
+    /// Merge partial game updates from a scoreboard refresh.
+    pub fn merge_updates(&mut self, games: Vec<ncaa_api::Game>) {
+        if let Some(t) = &mut self.tournament {
+            t.merge_updates(games);
+            // Re-detect the active round in case a new round started.
+            self.current_round = detect_active_round(t);
+        }
+    }
+
+    pub fn navigate_round_next(&mut self) {
+        if let Some(next) = self.view_round.next() {
+            self.view_round = next;
+            self.selected_game = 0;
+            self.scroll_offset = 0;
+        }
+    }
+
+    pub fn navigate_round_prev(&mut self) {
+        if let Some(prev) = self.view_round.prev() {
+            self.view_round = prev;
+            self.selected_game = 0;
+            self.scroll_offset = 0;
+        }
+    }
+
+    pub fn navigate_game_down(&mut self) {
+        let max = self.games_in_view().saturating_sub(1);
+        if self.selected_game < max {
+            self.selected_game += 1;
+        }
+    }
+
+    pub fn navigate_game_up(&mut self) {
+        self.selected_game = self.selected_game.saturating_sub(1);
+    }
+
+    pub fn cycle_region(&mut self) {
+        if !self.view_round.is_final_four() {
+            let region_count = self
+                .tournament
+                .as_ref()
+                .map(|t| t.regions.len().saturating_sub(1)) // exclude "National"
+                .unwrap_or(4);
+            self.selected_region = (self.selected_region + 1) % region_count.max(1);
+            self.selected_game = 0;
+            self.scroll_offset = 0;
+        }
+    }
+
+    /// Return the game ID of the currently selected game, if any.
+    pub fn selected_game_id(&self) -> Option<String> {
+        let tournament = self.tournament.as_ref()?;
+        let region = if self.view_round.is_final_four() {
+            tournament.regions.iter().find(|r| r.name == "National")?
+        } else {
+            tournament.regions.get(self.selected_region)?
+        };
+        let round = region
+            .rounds
+            .iter()
+            .find(|r| r.kind == self.view_round)?;
+        round.games.get(self.selected_game).map(|g| g.id.clone())
+    }
+
+    fn games_in_view(&self) -> usize {
+        let Some(tournament) = &self.tournament else {
+            return 0;
+        };
+        let region = if self.view_round.is_final_four() {
+            tournament.regions.iter().find(|r| r.name == "National")
+        } else {
+            tournament.regions.get(self.selected_region)
+        };
+        region
+            .and_then(|r| r.rounds.iter().find(|rnd| rnd.kind == self.view_round))
+            .map(|rnd| rnd.games.len())
+            .unwrap_or(0)
+    }
+}
+
+/// Detect the active tournament round by scanning game statuses.
+/// Returns the first round that has any InProgress games, or failing that,
+/// the last round that has any Final games.
+fn detect_active_round(tournament: &Tournament) -> RoundKind {
+    use ncaa_api::GameStatus;
+
+    let round_order = [
+        RoundKind::FirstFour,
+        RoundKind::First,
+        RoundKind::Second,
+        RoundKind::Sweet16,
+        RoundKind::Elite8,
+        RoundKind::FinalFour,
+        RoundKind::Championship,
+    ];
+
+    let mut last_with_games = RoundKind::First;
+
+    for kind in round_order {
+        let has_live = tournament.regions.iter().any(|reg| {
+            reg.rounds
+                .iter()
+                .filter(|r| r.kind == kind)
+                .flat_map(|r| r.games.iter())
+                .any(|g| g.status == GameStatus::InProgress)
+        });
+
+        if has_live {
+            return kind;
+        }
+
+        let has_final = tournament.regions.iter().any(|reg| {
+            reg.rounds
+                .iter()
+                .filter(|r| r.kind == kind)
+                .flat_map(|r| r.games.iter())
+                .any(|g| g.status == GameStatus::Final)
+        });
+
+        if has_final {
+            last_with_games = kind;
+        }
+    }
+
+    last_with_games
+}
+
+// ---------------------------------------------------------------------------
+// Game detail state
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Default)]
+pub struct GameDetailState {
+    pub detail: Option<GameDetail>,
+    pub scroll_offset: u16,
+}
+
+// ---------------------------------------------------------------------------
+// Root app state
+// ---------------------------------------------------------------------------
 
 #[derive(Default)]
 pub struct AppState {
     pub active_tab: MenuItem,
     pub previous_tab: MenuItem,
-    pub debug_state: DebugState,
+    pub show_intro: bool,
     pub show_logs: bool,
-    pub date_input: DateInput,
-    pub schedule: ScheduleState,
-    pub gameday: GamedayState,
-    pub box_score: BoxscoreState,
-    pub standings: StandingsState,
-    pub stats: StatsState,
+    pub last_error: Option<String>,
+    pub bracket: BracketState,
+    pub game_detail: GameDetailState,
+    pub animation: AnimationState,
+}
+
+impl AppState {
+    pub fn new() -> Self {
+        Self {
+            show_intro: true,
+            ..Self::default()
+        }
+    }
 }

@@ -1,0 +1,2600 @@
+{
+  "tournaments": [
+    {
+      "id": "22",
+      "name": "Men's NCAA Tournament",
+      "bracket": {
+        "rounds": [
+          {
+            "number": 1,
+            "name": "First Four",
+            "matchups": [
+              {
+                "id": "401745911",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "21",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "68",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "21",
+                      "displayName": "San Diego State San Diego St",
+                      "shortDisplayName": "San Diego State",
+                      "abbreviation": "SDSU",
+                      "color": "a6192e"
+                    }
+                  },
+                  {
+                    "id": "153",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "95",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "153",
+                      "displayName": "North Carolina North Carolina",
+                      "shortDisplayName": "North Carolina",
+                      "abbreviation": "UNC",
+                      "color": "7bafd4"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745907",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "2011",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "70",
+                    "curatedRank": {
+                      "current": 16
+                    },
+                    "team": {
+                      "id": "2011",
+                      "displayName": "Alabama State Alabama St",
+                      "shortDisplayName": "Alabama State",
+                      "abbreviation": "ALST",
+                      "color": "e9a900"
+                    }
+                  },
+                  {
+                    "id": "2598",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "68",
+                    "curatedRank": {
+                      "current": 16
+                    },
+                    "team": {
+                      "id": "2598",
+                      "displayName": "Saint Francis Saint Francis",
+                      "shortDisplayName": "Saint Francis",
+                      "abbreviation": "SFPA",
+                      "color": "a20012"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745913",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "44",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "72",
+                    "curatedRank": {
+                      "current": 16
+                    },
+                    "team": {
+                      "id": "44",
+                      "displayName": "American University American",
+                      "shortDisplayName": "American University",
+                      "abbreviation": "AMER",
+                      "color": "c41130"
+                    }
+                  },
+                  {
+                    "id": "116",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "83",
+                    "curatedRank": {
+                      "current": 16
+                    },
+                    "team": {
+                      "id": "116",
+                      "displayName": "Mount St. Mary's Mount St Marys",
+                      "shortDisplayName": "Mount St. Mary's",
+                      "abbreviation": "MSM",
+                      "color": "005596"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745909",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "251",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "80",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "251",
+                      "displayName": "Texas Texas",
+                      "shortDisplayName": "Texas",
+                      "abbreviation": "TEX",
+                      "color": "af5c37"
+                    }
+                  },
+                  {
+                    "id": "2752",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "86",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "2752",
+                      "displayName": "Xavier Xavier",
+                      "shortDisplayName": "Xavier",
+                      "abbreviation": "XAV",
+                      "color": "21304e"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 2,
+            "name": "1st Round",
+            "matchups": [
+              {
+                "id": "401745957",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "2",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "83",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "2",
+                      "displayName": "Auburn Auburn",
+                      "shortDisplayName": "Auburn",
+                      "abbreviation": "AUB",
+                      "color": "002b5c"
+                    }
+                  },
+                  {
+                    "id": "2011",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "63",
+                    "curatedRank": {
+                      "current": 16
+                    },
+                    "team": {
+                      "id": "2011",
+                      "displayName": "Alabama State Alabama St",
+                      "shortDisplayName": "Alabama State",
+                      "abbreviation": "ALST",
+                      "color": "e9a900"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745959",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "97",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "75",
+                    "curatedRank": {
+                      "current": 8
+                    },
+                    "team": {
+                      "id": "97",
+                      "displayName": "Louisville Louisville",
+                      "shortDisplayName": "Louisville",
+                      "abbreviation": "LOU",
+                      "color": "c9001f"
+                    }
+                  },
+                  {
+                    "id": "156",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "89",
+                    "curatedRank": {
+                      "current": 9
+                    },
+                    "team": {
+                      "id": "156",
+                      "displayName": "Creighton Creighton",
+                      "shortDisplayName": "Creighton",
+                      "abbreviation": "CREI",
+                      "color": "005ca9"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745963",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "130",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "68",
+                    "curatedRank": {
+                      "current": 5
+                    },
+                    "team": {
+                      "id": "130",
+                      "displayName": "Michigan Michigan",
+                      "shortDisplayName": "Michigan",
+                      "abbreviation": "MICH",
+                      "color": "ffcb05"
+                    }
+                  },
+                  {
+                    "id": "28",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "65",
+                    "curatedRank": {
+                      "current": 12
+                    },
+                    "team": {
+                      "id": "28",
+                      "displayName": "UC San Diego UC San Diego",
+                      "shortDisplayName": "UC San Diego",
+                      "abbreviation": "UCSD",
+                      "color": "000000"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745966",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "245",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "80",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "245",
+                      "displayName": "Texas A&M Texas A&M",
+                      "shortDisplayName": "Texas A&M",
+                      "abbreviation": "TA&M",
+                      "color": "500000"
+                    }
+                  },
+                  {
+                    "id": "43",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "71",
+                    "curatedRank": {
+                      "current": 13
+                    },
+                    "team": {
+                      "id": "43",
+                      "displayName": "Yale Yale",
+                      "shortDisplayName": "Yale",
+                      "abbreviation": "YALE",
+                      "color": "004a81"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745995",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "145",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "71",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "145",
+                      "displayName": "Ole Miss Ole Miss",
+                      "shortDisplayName": "Ole Miss",
+                      "abbreviation": "MISS",
+                      "color": "13294b"
+                    }
+                  },
+                  {
+                    "id": "153",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "64",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "153",
+                      "displayName": "North Carolina North Carolina",
+                      "shortDisplayName": "North Carolina",
+                      "abbreviation": "UNC",
+                      "color": "7bafd4"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745997",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "66",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "82",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "66",
+                      "displayName": "Iowa State Iowa State",
+                      "shortDisplayName": "Iowa State",
+                      "abbreviation": "ISU",
+                      "color": "ae192d"
+                    }
+                  },
+                  {
+                    "id": "288",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "55",
+                    "curatedRank": {
+                      "current": 14
+                    },
+                    "team": {
+                      "id": "288",
+                      "displayName": "Lipscomb Lipscomb",
+                      "shortDisplayName": "Lipscomb",
+                      "abbreviation": "LIP",
+                      "color": "20366C"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745999",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "269",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "66",
+                    "curatedRank": {
+                      "current": 7
+                    },
+                    "team": {
+                      "id": "269",
+                      "displayName": "Marquette Marquette",
+                      "shortDisplayName": "Marquette",
+                      "abbreviation": "MARQ",
+                      "color": "003366"
+                    }
+                  },
+                  {
+                    "id": "167",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "75",
+                    "curatedRank": {
+                      "current": 10
+                    },
+                    "team": {
+                      "id": "167",
+                      "displayName": "New Mexico New Mexico",
+                      "shortDisplayName": "New Mexico",
+                      "abbreviation": "UNM",
+                      "color": "ba0c2f"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746001",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "127",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "87",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "127",
+                      "displayName": "Michigan State Michigan St",
+                      "shortDisplayName": "Michigan State",
+                      "abbreviation": "MSU",
+                      "color": "173f35"
+                    }
+                  },
+                  {
+                    "id": "2803",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "62",
+                    "curatedRank": {
+                      "current": 15
+                    },
+                    "team": {
+                      "id": "2803",
+                      "displayName": "Bryant Bryant",
+                      "shortDisplayName": "Bryant",
+                      "abbreviation": "BRY",
+                      "color": "000000"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746017",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "57",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "95",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "57",
+                      "displayName": "Florida Florida",
+                      "shortDisplayName": "Florida",
+                      "abbreviation": "FLA",
+                      "color": "0021a5"
+                    }
+                  },
+                  {
+                    "id": "2450",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "69",
+                    "curatedRank": {
+                      "current": 16
+                    },
+                    "team": {
+                      "id": "2450",
+                      "displayName": "Norfolk State Norfolk St",
+                      "shortDisplayName": "Norfolk State",
+                      "abbreviation": "NORF",
+                      "color": "0c8968"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746018",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "41",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "67",
+                    "curatedRank": {
+                      "current": 8
+                    },
+                    "team": {
+                      "id": "41",
+                      "displayName": "UConn UConn",
+                      "shortDisplayName": "UConn",
+                      "abbreviation": "CONN",
+                      "color": "0c2340"
+                    }
+                  },
+                  {
+                    "id": "201",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "59",
+                    "curatedRank": {
+                      "current": 9
+                    },
+                    "team": {
+                      "id": "201",
+                      "displayName": "Oklahoma Oklahoma",
+                      "shortDisplayName": "Oklahoma",
+                      "abbreviation": "OU",
+                      "color": "990000"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746019",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "235",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "70",
+                    "curatedRank": {
+                      "current": 5
+                    },
+                    "team": {
+                      "id": "235",
+                      "displayName": "Memphis Memphis",
+                      "shortDisplayName": "Memphis",
+                      "abbreviation": "MEM",
+                      "color": "004991"
+                    }
+                  },
+                  {
+                    "id": "36",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "78",
+                    "curatedRank": {
+                      "current": 12
+                    },
+                    "team": {
+                      "id": "36",
+                      "displayName": "Colorado State Colorado St",
+                      "shortDisplayName": "Colorado State",
+                      "abbreviation": "CSU",
+                      "color": "004c23"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746021",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "120",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "81",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "120",
+                      "displayName": "Maryland Maryland",
+                      "shortDisplayName": "Maryland",
+                      "abbreviation": "MD",
+                      "color": "ce1126"
+                    }
+                  },
+                  {
+                    "id": "2253",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "49",
+                    "curatedRank": {
+                      "current": 13
+                    },
+                    "team": {
+                      "id": "2253",
+                      "displayName": "Grand Canyon Grand Canyon",
+                      "shortDisplayName": "Grand Canyon",
+                      "abbreviation": "GCU",
+                      "color": "522398"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745985",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "142",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "57",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "142",
+                      "displayName": "Missouri Missouri",
+                      "shortDisplayName": "Missouri",
+                      "abbreviation": "MIZ",
+                      "color": "f1b82d"
+                    }
+                  },
+                  {
+                    "id": "2181",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "67",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "2181",
+                      "displayName": "Drake Drake",
+                      "shortDisplayName": "Drake",
+                      "abbreviation": "DRKE",
+                      "color": "005596"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745986",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "2641",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "82",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "2641",
+                      "displayName": "Texas Tech Texas Tech",
+                      "shortDisplayName": "Texas Tech",
+                      "abbreviation": "TTU",
+                      "color": "da291c"
+                    }
+                  },
+                  {
+                    "id": "350",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "72",
+                    "curatedRank": {
+                      "current": 14
+                    },
+                    "team": {
+                      "id": "350",
+                      "displayName": "UNC Wilmington UNC Wilmington",
+                      "shortDisplayName": "UNC Wilmington",
+                      "abbreviation": "UNCW",
+                      "color": "00665e"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745987",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "2305",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "72",
+                    "curatedRank": {
+                      "current": 7
+                    },
+                    "team": {
+                      "id": "2305",
+                      "displayName": "Kansas Kansas",
+                      "shortDisplayName": "Kansas",
+                      "abbreviation": "KU",
+                      "color": "0051ba"
+                    }
+                  },
+                  {
+                    "id": "8",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "79",
+                    "curatedRank": {
+                      "current": 10
+                    },
+                    "team": {
+                      "id": "8",
+                      "displayName": "Arkansas Arkansas",
+                      "shortDisplayName": "Arkansas",
+                      "abbreviation": "ARK",
+                      "color": "a32136"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745989",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "2599",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "83",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "2599",
+                      "displayName": "St. John's St John's",
+                      "shortDisplayName": "St. John's",
+                      "abbreviation": "SJU",
+                      "color": "d10000"
+                    }
+                  },
+                  {
+                    "id": "2437",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "53",
+                    "curatedRank": {
+                      "current": 15
+                    },
+                    "team": {
+                      "id": "2437",
+                      "displayName": "Omaha Omaha",
+                      "shortDisplayName": "Omaha",
+                      "abbreviation": "OMA",
+                      "color": "e3193e"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746003",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "150",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "93",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "150",
+                      "displayName": "Duke Duke",
+                      "shortDisplayName": "Duke",
+                      "abbreviation": "DUKE",
+                      "color": "00539b"
+                    }
+                  },
+                  {
+                    "id": "116",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "49",
+                    "curatedRank": {
+                      "current": 16
+                    },
+                    "team": {
+                      "id": "116",
+                      "displayName": "Mount St. Mary's Mount St Marys",
+                      "shortDisplayName": "Mount St. Mary's",
+                      "abbreviation": "MSM",
+                      "color": "005596"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746005",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "344",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "72",
+                    "curatedRank": {
+                      "current": 8
+                    },
+                    "team": {
+                      "id": "344",
+                      "displayName": "Mississippi State Mississippi St",
+                      "shortDisplayName": "Mississippi State",
+                      "abbreviation": "MSST",
+                      "color": "5d1725"
+                    }
+                  },
+                  {
+                    "id": "239",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "75",
+                    "curatedRank": {
+                      "current": 9
+                    },
+                    "team": {
+                      "id": "239",
+                      "displayName": "Baylor Baylor",
+                      "shortDisplayName": "Baylor",
+                      "abbreviation": "BAY",
+                      "color": "154734"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746007",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "2483",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "81",
+                    "curatedRank": {
+                      "current": 5
+                    },
+                    "team": {
+                      "id": "2483",
+                      "displayName": "Oregon Oregon",
+                      "shortDisplayName": "Oregon",
+                      "abbreviation": "ORE",
+                      "color": "00934b"
+                    }
+                  },
+                  {
+                    "id": "2335",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "52",
+                    "curatedRank": {
+                      "current": 12
+                    },
+                    "team": {
+                      "id": "2335",
+                      "displayName": "Liberty Liberty",
+                      "shortDisplayName": "Liberty",
+                      "abbreviation": "LIB",
+                      "color": "0a254e"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746009",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "12",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "93",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "12",
+                      "displayName": "Arizona Arizona",
+                      "shortDisplayName": "Arizona",
+                      "abbreviation": "ARIZ",
+                      "color": "cc0033"
+                    }
+                  },
+                  {
+                    "id": "2006",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "65",
+                    "curatedRank": {
+                      "current": 13
+                    },
+                    "team": {
+                      "id": "2006",
+                      "displayName": "Akron Akron",
+                      "shortDisplayName": "Akron",
+                      "abbreviation": "AKR",
+                      "color": "041e42"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745968",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "252",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "80",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "252",
+                      "displayName": "BYU BYU",
+                      "shortDisplayName": "BYU",
+                      "abbreviation": "BYU",
+                      "color": "0047ba"
+                    }
+                  },
+                  {
+                    "id": "2670",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "71",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "2670",
+                      "displayName": "VCU VCU",
+                      "shortDisplayName": "VCU",
+                      "abbreviation": "VCU",
+                      "color": "ffaf00"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745970",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "275",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "85",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "275",
+                      "displayName": "Wisconsin Wisconsin",
+                      "shortDisplayName": "Wisconsin",
+                      "abbreviation": "WIS",
+                      "color": "a00000"
+                    }
+                  },
+                  {
+                    "id": "149",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "66",
+                    "curatedRank": {
+                      "current": 14
+                    },
+                    "team": {
+                      "id": "149",
+                      "displayName": "Montana Montana",
+                      "shortDisplayName": "Montana",
+                      "abbreviation": "MONT",
+                      "color": "751D4A"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746012",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "2608",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "59",
+                    "curatedRank": {
+                      "current": 7
+                    },
+                    "team": {
+                      "id": "2608",
+                      "displayName": "Saint Mary's Saint Mary's",
+                      "shortDisplayName": "Saint Mary's",
+                      "abbreviation": "SMC",
+                      "color": "d80024"
+                    }
+                  },
+                  {
+                    "id": "238",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "56",
+                    "curatedRank": {
+                      "current": 10
+                    },
+                    "team": {
+                      "id": "238",
+                      "displayName": "Vanderbilt Vanderbilt",
+                      "shortDisplayName": "Vanderbilt",
+                      "abbreviation": "VAN",
+                      "color": "000000"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746014",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "333",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "90",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "333",
+                      "displayName": "Alabama Alabama",
+                      "shortDisplayName": "Alabama",
+                      "abbreviation": "ALA",
+                      "color": "9e1b32"
+                    }
+                  },
+                  {
+                    "id": "2523",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "81",
+                    "curatedRank": {
+                      "current": 15
+                    },
+                    "team": {
+                      "id": "2523",
+                      "displayName": "Robert Morris Robert Morris",
+                      "shortDisplayName": "Robert Morris",
+                      "abbreviation": "RMU",
+                      "color": "00214D"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745972",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "248",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "78",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "248",
+                      "displayName": "Houston Houston",
+                      "shortDisplayName": "Houston",
+                      "abbreviation": "HOU",
+                      "color": "c8102e"
+                    }
+                  },
+                  {
+                    "id": "2565",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "40",
+                    "curatedRank": {
+                      "current": 16
+                    },
+                    "team": {
+                      "id": "2565",
+                      "displayName": "SIU Edwardsville SIUE",
+                      "shortDisplayName": "SIU Edwardsville",
+                      "abbreviation": "SIUE",
+                      "color": "eb1c23"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745974",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "2250",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "89",
+                    "curatedRank": {
+                      "current": 8
+                    },
+                    "team": {
+                      "id": "2250",
+                      "displayName": "Gonzaga Gonzaga",
+                      "shortDisplayName": "Gonzaga",
+                      "abbreviation": "GONZ",
+                      "color": "041e42"
+                    }
+                  },
+                  {
+                    "id": "61",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "68",
+                    "curatedRank": {
+                      "current": 9
+                    },
+                    "team": {
+                      "id": "61",
+                      "displayName": "Georgia Georgia",
+                      "shortDisplayName": "Georgia",
+                      "abbreviation": "UGA",
+                      "color": "ba0c2f"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745978",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "228",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "67",
+                    "curatedRank": {
+                      "current": 5
+                    },
+                    "team": {
+                      "id": "228",
+                      "displayName": "Clemson Clemson",
+                      "shortDisplayName": "Clemson",
+                      "abbreviation": "CLEM",
+                      "color": "f56600"
+                    }
+                  },
+                  {
+                    "id": "2377",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "69",
+                    "curatedRank": {
+                      "current": 12
+                    },
+                    "team": {
+                      "id": "2377",
+                      "displayName": "McNeese McNeese",
+                      "shortDisplayName": "McNeese",
+                      "abbreviation": "MCN",
+                      "color": "00529C"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745980",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "2509",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "75",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "2509",
+                      "displayName": "Purdue Purdue",
+                      "shortDisplayName": "Purdue",
+                      "abbreviation": "PUR",
+                      "color": "ceb888"
+                    }
+                  },
+                  {
+                    "id": "2272",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "63",
+                    "curatedRank": {
+                      "current": 13
+                    },
+                    "team": {
+                      "id": "2272",
+                      "displayName": "High Point High Point",
+                      "shortDisplayName": "High Point",
+                      "abbreviation": "HPU",
+                      "color": "b0b7bc"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746015",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "356",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "86",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "356",
+                      "displayName": "Illinois Illinois",
+                      "shortDisplayName": "Illinois",
+                      "abbreviation": "ILL",
+                      "color": "ff5f05"
+                    }
+                  },
+                  {
+                    "id": "2752",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "73",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "2752",
+                      "displayName": "Xavier Xavier",
+                      "shortDisplayName": "Xavier",
+                      "abbreviation": "XAV",
+                      "color": "21304e"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746016",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "96",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "76",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "96",
+                      "displayName": "Kentucky Kentucky",
+                      "shortDisplayName": "Kentucky",
+                      "abbreviation": "UK",
+                      "color": "0033a0"
+                    }
+                  },
+                  {
+                    "id": "2653",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "57",
+                    "curatedRank": {
+                      "current": 14
+                    },
+                    "team": {
+                      "id": "2653",
+                      "displayName": "Troy Troy",
+                      "shortDisplayName": "Troy",
+                      "abbreviation": "TROY",
+                      "color": "862633"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745983",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "26",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "72",
+                    "curatedRank": {
+                      "current": 7
+                    },
+                    "team": {
+                      "id": "26",
+                      "displayName": "UCLA UCLA",
+                      "shortDisplayName": "UCLA",
+                      "abbreviation": "UCLA",
+                      "color": "2774ae"
+                    }
+                  },
+                  {
+                    "id": "328",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "47",
+                    "curatedRank": {
+                      "current": 10
+                    },
+                    "team": {
+                      "id": "328",
+                      "displayName": "Utah State Utah State",
+                      "shortDisplayName": "Utah State",
+                      "abbreviation": "USU",
+                      "color": "0f2439"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401745984",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "2633",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "77",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "2633",
+                      "displayName": "Tennessee Tennessee",
+                      "shortDisplayName": "Tennessee",
+                      "abbreviation": "TENN",
+                      "color": "ff8200"
+                    }
+                  },
+                  {
+                    "id": "2747",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "62",
+                    "curatedRank": {
+                      "current": 15
+                    },
+                    "team": {
+                      "id": "2747",
+                      "displayName": "Wofford Wofford",
+                      "shortDisplayName": "Wofford",
+                      "abbreviation": "WOF",
+                      "color": "533B22"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 3,
+            "name": "2nd Round",
+            "matchups": [
+              {
+                "id": "401746042",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "2",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "82",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "2",
+                      "displayName": "Auburn Auburn",
+                      "shortDisplayName": "Auburn",
+                      "abbreviation": "AUB",
+                      "color": "002b5c"
+                    }
+                  },
+                  {
+                    "id": "156",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "70",
+                    "curatedRank": {
+                      "current": 9
+                    },
+                    "team": {
+                      "id": "156",
+                      "displayName": "Creighton Creighton",
+                      "shortDisplayName": "Creighton",
+                      "abbreviation": "CREI",
+                      "color": "005ca9"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746036",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "130",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "91",
+                    "curatedRank": {
+                      "current": 5
+                    },
+                    "team": {
+                      "id": "130",
+                      "displayName": "Michigan Michigan",
+                      "shortDisplayName": "Michigan",
+                      "abbreviation": "MICH",
+                      "color": "ffcb05"
+                    }
+                  },
+                  {
+                    "id": "245",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "79",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "245",
+                      "displayName": "Texas A&M Texas A&M",
+                      "shortDisplayName": "Texas A&M",
+                      "abbreviation": "TA&M",
+                      "color": "500000"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746047",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "145",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "91",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "145",
+                      "displayName": "Ole Miss Ole Miss",
+                      "shortDisplayName": "Ole Miss",
+                      "abbreviation": "MISS",
+                      "color": "13294b"
+                    }
+                  },
+                  {
+                    "id": "66",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "78",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "66",
+                      "displayName": "Iowa State Iowa State",
+                      "shortDisplayName": "Iowa State",
+                      "abbreviation": "ISU",
+                      "color": "ae192d"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746054",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "167",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "63",
+                    "curatedRank": {
+                      "current": 10
+                    },
+                    "team": {
+                      "id": "167",
+                      "displayName": "New Mexico New Mexico",
+                      "shortDisplayName": "New Mexico",
+                      "abbreviation": "UNM",
+                      "color": "ba0c2f"
+                    }
+                  },
+                  {
+                    "id": "127",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "71",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "127",
+                      "displayName": "Michigan State Michigan St",
+                      "shortDisplayName": "Michigan State",
+                      "abbreviation": "MSU",
+                      "color": "173f35"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746050",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "57",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "77",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "57",
+                      "displayName": "Florida Florida",
+                      "shortDisplayName": "Florida",
+                      "abbreviation": "FLA",
+                      "color": "0021a5"
+                    }
+                  },
+                  {
+                    "id": "41",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "75",
+                    "curatedRank": {
+                      "current": 8
+                    },
+                    "team": {
+                      "id": "41",
+                      "displayName": "UConn UConn",
+                      "shortDisplayName": "UConn",
+                      "abbreviation": "CONN",
+                      "color": "0c2340"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746046",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "36",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "71",
+                    "curatedRank": {
+                      "current": 12
+                    },
+                    "team": {
+                      "id": "36",
+                      "displayName": "Colorado State Colorado St",
+                      "shortDisplayName": "Colorado State",
+                      "abbreviation": "CSU",
+                      "color": "004c23"
+                    }
+                  },
+                  {
+                    "id": "120",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "72",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "120",
+                      "displayName": "Maryland Maryland",
+                      "shortDisplayName": "Maryland",
+                      "abbreviation": "MD",
+                      "color": "ce1126"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746040",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "2181",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "64",
+                    "curatedRank": {
+                      "current": 11
+                    },
+                    "team": {
+                      "id": "2181",
+                      "displayName": "Drake Drake",
+                      "shortDisplayName": "Drake",
+                      "abbreviation": "DRKE",
+                      "color": "005596"
+                    }
+                  },
+                  {
+                    "id": "2641",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "77",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "2641",
+                      "displayName": "Texas Tech Texas Tech",
+                      "shortDisplayName": "Texas Tech",
+                      "abbreviation": "TTU",
+                      "color": "da291c"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746032",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "8",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "75",
+                    "curatedRank": {
+                      "current": 10
+                    },
+                    "team": {
+                      "id": "8",
+                      "displayName": "Arkansas Arkansas",
+                      "shortDisplayName": "Arkansas",
+                      "abbreviation": "ARK",
+                      "color": "a32136"
+                    }
+                  },
+                  {
+                    "id": "2599",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "66",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "2599",
+                      "displayName": "St. John's St John's",
+                      "shortDisplayName": "St. John's",
+                      "abbreviation": "SJU",
+                      "color": "d10000"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746049",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "150",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "89",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "150",
+                      "displayName": "Duke Duke",
+                      "shortDisplayName": "Duke",
+                      "abbreviation": "DUKE",
+                      "color": "00539b"
+                    }
+                  },
+                  {
+                    "id": "239",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "66",
+                    "curatedRank": {
+                      "current": 9
+                    },
+                    "team": {
+                      "id": "239",
+                      "displayName": "Baylor Baylor",
+                      "shortDisplayName": "Baylor",
+                      "abbreviation": "BAY",
+                      "color": "154734"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746045",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "2483",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "83",
+                    "curatedRank": {
+                      "current": 5
+                    },
+                    "team": {
+                      "id": "2483",
+                      "displayName": "Oregon Oregon",
+                      "shortDisplayName": "Oregon",
+                      "abbreviation": "ORE",
+                      "color": "00934b"
+                    }
+                  },
+                  {
+                    "id": "12",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "87",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "12",
+                      "displayName": "Arizona Arizona",
+                      "shortDisplayName": "Arizona",
+                      "abbreviation": "ARIZ",
+                      "color": "cc0033"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746034",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "252",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "91",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "252",
+                      "displayName": "BYU BYU",
+                      "shortDisplayName": "BYU",
+                      "abbreviation": "BYU",
+                      "color": "0047ba"
+                    }
+                  },
+                  {
+                    "id": "275",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "89",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "275",
+                      "displayName": "Wisconsin Wisconsin",
+                      "shortDisplayName": "Wisconsin",
+                      "abbreviation": "WIS",
+                      "color": "a00000"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746052",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "2608",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "66",
+                    "curatedRank": {
+                      "current": 7
+                    },
+                    "team": {
+                      "id": "2608",
+                      "displayName": "Saint Mary's Saint Mary's",
+                      "shortDisplayName": "Saint Mary's",
+                      "abbreviation": "SMC",
+                      "color": "d80024"
+                    }
+                  },
+                  {
+                    "id": "333",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "80",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "333",
+                      "displayName": "Alabama Alabama",
+                      "shortDisplayName": "Alabama",
+                      "abbreviation": "ALA",
+                      "color": "9e1b32"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746038",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "248",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "81",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "248",
+                      "displayName": "Houston Houston",
+                      "shortDisplayName": "Houston",
+                      "abbreviation": "HOU",
+                      "color": "c8102e"
+                    }
+                  },
+                  {
+                    "id": "2250",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "76",
+                    "curatedRank": {
+                      "current": 8
+                    },
+                    "team": {
+                      "id": "2250",
+                      "displayName": "Gonzaga Gonzaga",
+                      "shortDisplayName": "Gonzaga",
+                      "abbreviation": "GONZ",
+                      "color": "041e42"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746030",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "2377",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "62",
+                    "curatedRank": {
+                      "current": 12
+                    },
+                    "team": {
+                      "id": "2377",
+                      "displayName": "McNeese McNeese",
+                      "shortDisplayName": "McNeese",
+                      "abbreviation": "MCN",
+                      "color": "00529C"
+                    }
+                  },
+                  {
+                    "id": "2509",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "76",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "2509",
+                      "displayName": "Purdue Purdue",
+                      "shortDisplayName": "Purdue",
+                      "abbreviation": "PUR",
+                      "color": "ceb888"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746048",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "356",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "75",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "356",
+                      "displayName": "Illinois Illinois",
+                      "shortDisplayName": "Illinois",
+                      "abbreviation": "ILL",
+                      "color": "ff5f05"
+                    }
+                  },
+                  {
+                    "id": "96",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "84",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "96",
+                      "displayName": "Kentucky Kentucky",
+                      "shortDisplayName": "Kentucky",
+                      "abbreviation": "UK",
+                      "color": "0033a0"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746044",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "26",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "58",
+                    "curatedRank": {
+                      "current": 7
+                    },
+                    "team": {
+                      "id": "26",
+                      "displayName": "UCLA UCLA",
+                      "shortDisplayName": "UCLA",
+                      "abbreviation": "UCLA",
+                      "color": "2774ae"
+                    }
+                  },
+                  {
+                    "id": "2633",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "67",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "2633",
+                      "displayName": "Tennessee Tennessee",
+                      "shortDisplayName": "Tennessee",
+                      "abbreviation": "TENN",
+                      "color": "ff8200"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 4,
+            "name": "Sweet 16",
+            "matchups": [
+              {
+                "id": "401746069",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "2",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "78",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "2",
+                      "displayName": "Auburn Auburn",
+                      "shortDisplayName": "Auburn",
+                      "abbreviation": "AUB",
+                      "color": "002b5c"
+                    }
+                  },
+                  {
+                    "id": "130",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "65",
+                    "curatedRank": {
+                      "current": 5
+                    },
+                    "team": {
+                      "id": "130",
+                      "displayName": "Michigan Michigan",
+                      "shortDisplayName": "Michigan",
+                      "abbreviation": "MICH",
+                      "color": "ffcb05"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746070",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "145",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "70",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "145",
+                      "displayName": "Ole Miss Ole Miss",
+                      "shortDisplayName": "Ole Miss",
+                      "abbreviation": "MISS",
+                      "color": "13294b"
+                    }
+                  },
+                  {
+                    "id": "127",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "73",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "127",
+                      "displayName": "Michigan State Michigan St",
+                      "shortDisplayName": "Michigan State",
+                      "abbreviation": "MSU",
+                      "color": "173f35"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746065",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "57",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "87",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "57",
+                      "displayName": "Florida Florida",
+                      "shortDisplayName": "Florida",
+                      "abbreviation": "FLA",
+                      "color": "0021a5"
+                    }
+                  },
+                  {
+                    "id": "120",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "71",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "120",
+                      "displayName": "Maryland Maryland",
+                      "shortDisplayName": "Maryland",
+                      "abbreviation": "MD",
+                      "color": "ce1126"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746063",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "2641",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "85",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "2641",
+                      "displayName": "Texas Tech Texas Tech",
+                      "shortDisplayName": "Texas Tech",
+                      "abbreviation": "TTU",
+                      "color": "da291c"
+                    }
+                  },
+                  {
+                    "id": "8",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "83",
+                    "curatedRank": {
+                      "current": 10
+                    },
+                    "team": {
+                      "id": "8",
+                      "displayName": "Arkansas Arkansas",
+                      "shortDisplayName": "Arkansas",
+                      "abbreviation": "ARK",
+                      "color": "a32136"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746061",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "150",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "100",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "150",
+                      "displayName": "Duke Duke",
+                      "shortDisplayName": "Duke",
+                      "abbreviation": "DUKE",
+                      "color": "00539b"
+                    }
+                  },
+                  {
+                    "id": "12",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "93",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "12",
+                      "displayName": "Arizona Arizona",
+                      "shortDisplayName": "Arizona",
+                      "abbreviation": "ARIZ",
+                      "color": "cc0033"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746062",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "252",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "88",
+                    "curatedRank": {
+                      "current": 6
+                    },
+                    "team": {
+                      "id": "252",
+                      "displayName": "BYU BYU",
+                      "shortDisplayName": "BYU",
+                      "abbreviation": "BYU",
+                      "color": "0047ba"
+                    }
+                  },
+                  {
+                    "id": "333",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "113",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "333",
+                      "displayName": "Alabama Alabama",
+                      "shortDisplayName": "Alabama",
+                      "abbreviation": "ALA",
+                      "color": "9e1b32"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746071",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "248",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "62",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "248",
+                      "displayName": "Houston Houston",
+                      "shortDisplayName": "Houston",
+                      "abbreviation": "HOU",
+                      "color": "c8102e"
+                    }
+                  },
+                  {
+                    "id": "2509",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "60",
+                    "curatedRank": {
+                      "current": 4
+                    },
+                    "team": {
+                      "id": "2509",
+                      "displayName": "Purdue Purdue",
+                      "shortDisplayName": "Purdue",
+                      "abbreviation": "PUR",
+                      "color": "ceb888"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746072",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "96",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "65",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "96",
+                      "displayName": "Kentucky Kentucky",
+                      "shortDisplayName": "Kentucky",
+                      "abbreviation": "UK",
+                      "color": "0033a0"
+                    }
+                  },
+                  {
+                    "id": "2633",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "78",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "2633",
+                      "displayName": "Tennessee Tennessee",
+                      "shortDisplayName": "Tennessee",
+                      "abbreviation": "TENN",
+                      "color": "ff8200"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 5,
+            "name": "Elite 8",
+            "matchups": [
+              {
+                "id": "401746078",
+                "note": "SOUTH",
+                "competitors": [
+                  {
+                    "id": "2",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "70",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "2",
+                      "displayName": "Auburn Auburn",
+                      "shortDisplayName": "Auburn",
+                      "abbreviation": "AUB",
+                      "color": "002b5c"
+                    }
+                  },
+                  {
+                    "id": "127",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "64",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "127",
+                      "displayName": "Michigan State Michigan St",
+                      "shortDisplayName": "Michigan State",
+                      "abbreviation": "MSU",
+                      "color": "173f35"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746077",
+                "note": "WEST",
+                "competitors": [
+                  {
+                    "id": "57",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "84",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "57",
+                      "displayName": "Florida Florida",
+                      "shortDisplayName": "Florida",
+                      "abbreviation": "FLA",
+                      "color": "0021a5"
+                    }
+                  },
+                  {
+                    "id": "2641",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "79",
+                    "curatedRank": {
+                      "current": 3
+                    },
+                    "team": {
+                      "id": "2641",
+                      "displayName": "Texas Tech Texas Tech",
+                      "shortDisplayName": "Texas Tech",
+                      "abbreviation": "TTU",
+                      "color": "da291c"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746076",
+                "note": "EAST",
+                "competitors": [
+                  {
+                    "id": "150",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "85",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "150",
+                      "displayName": "Duke Duke",
+                      "shortDisplayName": "Duke",
+                      "abbreviation": "DUKE",
+                      "color": "00539b"
+                    }
+                  },
+                  {
+                    "id": "333",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "65",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "333",
+                      "displayName": "Alabama Alabama",
+                      "shortDisplayName": "Alabama",
+                      "abbreviation": "ALA",
+                      "color": "9e1b32"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746079",
+                "note": "MIDWEST",
+                "competitors": [
+                  {
+                    "id": "248",
+                    "homeAway": "home",
+                    "winner": true,
+                    "score": "69",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "248",
+                      "displayName": "Houston Houston",
+                      "shortDisplayName": "Houston",
+                      "abbreviation": "HOU",
+                      "color": "c8102e"
+                    }
+                  },
+                  {
+                    "id": "2633",
+                    "homeAway": "away",
+                    "winner": false,
+                    "score": "50",
+                    "curatedRank": {
+                      "current": 2
+                    },
+                    "team": {
+                      "id": "2633",
+                      "displayName": "Tennessee Tennessee",
+                      "shortDisplayName": "Tennessee",
+                      "abbreviation": "TENN",
+                      "color": "ff8200"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 6,
+            "name": "Final Four",
+            "matchups": [
+              {
+                "id": "401746081",
+                "note": "National",
+                "competitors": [
+                  {
+                    "id": "2",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "73",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "2",
+                      "displayName": "Auburn Auburn",
+                      "shortDisplayName": "Auburn",
+                      "abbreviation": "AUB",
+                      "color": "002b5c"
+                    }
+                  },
+                  {
+                    "id": "57",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "79",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "57",
+                      "displayName": "Florida Florida",
+                      "shortDisplayName": "Florida",
+                      "abbreviation": "FLA",
+                      "color": "0021a5"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "401746080",
+                "note": "National",
+                "competitors": [
+                  {
+                    "id": "150",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "67",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "150",
+                      "displayName": "Duke Duke",
+                      "shortDisplayName": "Duke",
+                      "abbreviation": "DUKE",
+                      "color": "00539b"
+                    }
+                  },
+                  {
+                    "id": "248",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "70",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "248",
+                      "displayName": "Houston Houston",
+                      "shortDisplayName": "Houston",
+                      "abbreviation": "HOU",
+                      "color": "c8102e"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "number": 7,
+            "name": "Championship",
+            "matchups": [
+              {
+                "id": "401746082",
+                "note": "National",
+                "competitors": [
+                  {
+                    "id": "57",
+                    "homeAway": "away",
+                    "winner": true,
+                    "score": "65",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "57",
+                      "displayName": "Florida Florida",
+                      "shortDisplayName": "Florida",
+                      "abbreviation": "FLA",
+                      "color": "0021a5"
+                    }
+                  },
+                  {
+                    "id": "248",
+                    "homeAway": "home",
+                    "winner": false,
+                    "score": "63",
+                    "curatedRank": {
+                      "current": 1
+                    },
+                    "team": {
+                      "id": "248",
+                      "displayName": "Houston Houston",
+                      "shortDisplayName": "Houston",
+                      "abbreviation": "HOU",
+                      "color": "c8102e"
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

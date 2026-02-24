@@ -17,38 +17,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Format the score changes on non pitch events (e.g. pass ball) the same as an
-  at bat event: [PR 86](https://github.com/mlb-rs/mlbt/pull/86).
+  at bat event: [PR 86](https://github.com/holynakamoto/mmtui/pull/86).
 
 ### Added 
 
 - Add toggle to display standings league wide instead of divisional with `l`. 
-  Thanks @tjweir! [PR 87](https://github.com/mlb-rs/mlbt/pull/87)
+  Thanks @tjweir! [PR 87](https://github.com/holynakamoto/mmtui/pull/87)
 
 ## [0.0.18] - 2025-07-19
 
 ### Fixed
 
-- Reset the box score correctly when changing dates in the schedule: [PR 84](https://github.com/mlb-rs/mlbt/pull/84)
+- Reset the box score correctly when changing dates in the schedule: [PR 84](https://github.com/holynakamoto/mmtui/pull/84)
 
 ### Added
 
-- Docker images of `mlbt` are now published to Github. Thanks @isaacnboyd! [PR 81](https://github.com/mlb-rs/mlbt/pull/81)
+- Docker images of `mmtui` are now published to Github. Thanks @isaacnboyd! [PR 81](https://github.com/holynakamoto/mmtui/pull/81)
 
 ## [0.0.17] - 2025-07-06
 
 ### Added
 
-- Update box score UI with way more information: [PR 74](https://github.com/mlb-rs/mlbt/pull/74) & [PR 78](https://github.com/mlb-rs/mlbt/pull/78)
+- Update box score UI with way more information: [PR 74](https://github.com/holynakamoto/mmtui/pull/74) & [PR 78](https://github.com/holynakamoto/mmtui/pull/78)
 
 ### Changed
 
-- Add team abbreviation to player stats: [PR 67](https://github.com/mlb-rs/mlbt/pull/67)
-- Add arrow key (up/down) support wherever j/k is supported: [PR 69](https://github.com/mlb-rs/mlbt/pull/69)
+- Add team abbreviation to player stats: [PR 67](https://github.com/holynakamoto/mmtui/pull/67)
+- Add arrow key (up/down) support wherever j/k is supported: [PR 69](https://github.com/holynakamoto/mmtui/pull/69)
 - Add last 10, runs scored/against, run differential, home/away splits, and 
-  expected win/loss to Standings: [PR 68](https://github.com/mlb-rs/mlbt/pull/68) and [PR 70](https://github.com/mlb-rs/mlbt/pull/70)
-- Bump Rust to 1.88: [PR 71](https://github.com/mlb-rs/mlbt/pull/71)
-- Show the current inning of a live game in Schedule: [PR 72](https://github.com/mlb-rs/mlbt/pull/72)
-- Change styling of outs and the score in Gameday. Thanks @sliminality! [PR 76](https://github.com/mlb-rs/mlbt/pull/76) & [PR 77](https://github.com/mlb-rs/mlbt/pull/77)
+  expected win/loss to Standings: [PR 68](https://github.com/holynakamoto/mmtui/pull/68) and [PR 70](https://github.com/holynakamoto/mmtui/pull/70)
+- Bump Rust to 1.88: [PR 71](https://github.com/holynakamoto/mmtui/pull/71)
+- Show the current inning of a live game in Schedule: [PR 72](https://github.com/holynakamoto/mmtui/pull/72)
+- Change styling of outs and the score in Gameday. Thanks @sliminality! [PR 76](https://github.com/holynakamoto/mmtui/pull/76) & [PR 77](https://github.com/holynakamoto/mmtui/pull/77)
 
 ## [0.0.16] - 2025-06-24
 
@@ -56,26 +56,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Gameday view now shows all the plays for the whole inning instead of just the
   half inning. The game info (score, inning, on base, etc.) has been updated
-  and moved to above the pitch display. [PR 65](https://github.com/mlb-rs/mlbt/pull/65)
+  and moved to above the pitch display. [PR 65](https://github.com/holynakamoto/mmtui/pull/65)
 - The Schedule view now displays the team record and the losing team is 
-  completely greyed out. [PR 62](https://github.com/mlb-rs/mlbt/pull/62)
+  completely greyed out. [PR 62](https://github.com/holynakamoto/mmtui/pull/62)
 - Standings are now sorted by the configured favorite team, so the division with
   the team is always shown first. Additionally, the favorite team is 
-  automatically selected and highlighted. [PR 58](https://github.com/mlb-rs/mlbt/pull/58)
+  automatically selected and highlighted. [PR 58](https://github.com/holynakamoto/mmtui/pull/58)
 
 ### Added
 
-- Add more info to Gameday view, [PR 65](https://github.com/mlb-rs/mlbt/pull/65):
+- Add more info to Gameday view, [PR 65](https://github.com/holynakamoto/mmtui/pull/65):
   - hit stats (exit velo, launch angle, distance)
   - batter stats and highlights (e.g. "1-3, HR, 2 RBI")
   - pitcher stats and highlights (e.g. "89 P - 58 S, 5.0 IP, 3 ER, 4 K, 2 BB)
 - Add win probability API and graphs. Get an overview of the win probability of
   a game in the Schedule view and a more detailed breakdown in Gameday view.
-  Press `w` to toggle the win probability graphs on or off. [PR 61](https://github.com/mlb-rs/mlbt/pull/61)
+  Press `w` to toggle the win probability graphs on or off. [PR 61](https://github.com/holynakamoto/mmtui/pull/61)
 - Add selection for at bats in Gameday view. Use `j` and `k` to scroll through
-  at bats and see all the pitches and events for that at bat. [PR 59](https://github.com/mlb-rs/mlbt/pull/59)
-- Add a spinning loader when API calls are in flight: [PR 56](https://github.com/mlb-rs/mlbt/pull/56)
-- Add configurable logging for API calls: [PR 66](https://github.com/mlb-rs/mlbt/pull/66)
+  at bats and see all the pitches and events for that at bat. [PR 59](https://github.com/holynakamoto/mmtui/pull/59)
+- Add a spinning loader when API calls are in flight: [PR 56](https://github.com/holynakamoto/mmtui/pull/56)
+- Add configurable logging for API calls: [PR 66](https://github.com/holynakamoto/mmtui/pull/66)
 
 ## [0.0.15] - 2025-06-03
 
@@ -87,14 +87,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Add sorting to stats view! Use `s` to sort the stats by a column: [PR 52](https://github.com/mlb-rs/mlbt/pull/52)
-- Add date picker to Standings and Stats! [PR 53](https://github.com/mlb-rs/mlbt/pull/53)
+- Add sorting to stats view! Use `s` to sort the stats by a column: [PR 52](https://github.com/holynakamoto/mmtui/pull/52)
+- Add date picker to Standings and Stats! [PR 53](https://github.com/holynakamoto/mmtui/pull/53)
 - Add `timezone` to the config file. This changes which time zone is used to 
   display the start time of games in the Schedule.
 
 ### Changed
 
-- Update GameDay UI to display more information [PR 50](https://github.com/mlb-rs/mlbt/pull/50):
+- Update GameDay UI to display more information [PR 50](https://github.com/holynakamoto/mmtui/pull/50):
   - play descriptions now wrap lines
   - if runs are scored the new game score is shown
   - other events (e.g. pickoff attempt, wild pitch, mount visit, etc.) that
@@ -119,19 +119,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Config file for setting your favorite team, which will always be first in 
-  schedule view: [Issue 16](https://github.com/mlb-rs/mlbt/issues/16)
+  schedule view: [Issue 16](https://github.com/holynakamoto/mmtui/issues/16)
 - Change the schedule date with arrow keys: use `left` for the previous day and
   `right` for the next day
 
 ### Changed
 
-- Move API to be async and do api calls concurrently when possible: [Issue 13](https://github.com/mlb-rs/mlbt/issues/13)
+- Move API to be async and do api calls concurrently when possible: [Issue 13](https://github.com/holynakamoto/mmtui/issues/13)
 - Switch from `tui-rs` to a new (maintained) fork `ratatui`. Thanks `tui-rs`!
 - Update dependencies and refactor code a bit
 
 ### Fixed
 
-- Getting stuck in help menu: [Issue 29](https://github.com/mlb-rs/mlbt/issues/29)
+- Getting stuck in help menu: [Issue 29](https://github.com/holynakamoto/mmtui/issues/29)
 
 ## [0.0.11] - 2022-04-13
 
@@ -142,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Crash due to Indian Guardians name change: [Issue 27](https://github.com/mlb-rs/mlbt/issues/27)
+- Crash due to Indian Guardians name change: [Issue 27](https://github.com/holynakamoto/mmtui/issues/27)
 
 ## [0.0.10] - 2021-09-23
 
@@ -153,7 +153,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Table column flickering: [Issue 10](https://github.com/mlb-rs/mlbt/issues/10)
+- Table column flickering: [Issue 10](https://github.com/holynakamoto/mmtui/issues/10)
 - API error when deserializing season stats, as it turns out batters leave more
   than 256 men on base in a season. Switched everything to `u16`s.
 
@@ -161,25 +161,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Stats view: [PR 25](https://github.com/mlb-rs/mlbt/pull/25)
+- Stats view: [PR 25](https://github.com/holynakamoto/mmtui/pull/25)
 - Added a panic hook to print a nice stack trace on crash
 
 ### Fixed
 
-- All Star game caused a crash when the schedule was loaded: [PR 24](https://github.com/mlb-rs/mlbt/pull/24)
+- All Star game caused a crash when the schedule was loaded: [PR 24](https://github.com/holynakamoto/mmtui/pull/24)
 
 ## [0.0.8] - 2021-06-29
 
 ### Added
 
-- Standings view: [PR 19](https://github.com/mlb-rs/mlbt/pull/19)
+- Standings view: [PR 19](https://github.com/holynakamoto/mmtui/pull/19)
 - Added integration tests for the API
-- Added a date picker to view schedule on a different day: [PR 21](https://github.com/mlb-rs/mlbt/pull/21)
+- Added a date picker to view schedule on a different day: [PR 21](https://github.com/holynakamoto/mmtui/pull/21)
 
 ### Changed
 
-- Updated `Help` display to alert user if terminal is too small: [PR 20](https://github.com/mlb-rs/mlbt/pull/20)
-- UI tweaks: [PR 22](https://github.com/mlb-rs/mlbt/pull/22)
+- Updated `Help` display to alert user if terminal is too small: [PR 20](https://github.com/holynakamoto/mmtui/pull/20)
+- UI tweaks: [PR 22](https://github.com/holynakamoto/mmtui/pull/22)
 
 ## [0.0.7] - 2021-06-05
 

@@ -1,13 +1,13 @@
 [package]
-name = "mlbt"
-version = "0.0.20-alpha.1"
+name = "mmtui"
+version = "0.1.0"
 authors = ["Andrew Schneider <andjschneider@gmail.com>"]
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/mlb-rs/mlbt"
+repository = "https://github.com/holynakamoto/mmtui"
 readme = "README.md"
-description = "A terminal user interface for the MLB stats API. Watch a baseball game in your terminal! ⚾"
-keywords = ["baseball", "mlb", "terminal", "tui"]
+description = "A terminal user interface for the NCAA March Madness tournament. Watch the bracket in your terminal!"
+keywords = ["basketball", "ncaa", "march-madness", "terminal", "tui"]
 categories = ["command-line-utilities"]
 
 [profile.release]
@@ -23,14 +23,10 @@ members = [".", "api"]
 anyhow = "1.0.100"
 better-panic = "0.3.0"
 chrono = "0.4.43"
-chrono-tz = { version = "0.10.4", features = ["serde"] }
 crossterm = "0.29.0"
-directories = "6.0.0"
-indexmap = "2.13.0"
 log = "0.4.29"
-mlb-api = { path = "api", version = "0.1.0" }
+ncaa-api = { path = "api", version = "0.1.0" }
 serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.49.0", features = ["full"] }
-toml = "0.9.8"
 tui = { package = "ratatui", version = "0.30.0", features = ["unstable-rendered-line-info"] }
 tui-logger = { version = "0.18.1", features = ["crossterm"] }
