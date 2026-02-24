@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improve tournament year selection and include a `2025` fallback to avoid
   empty future-year bracket loads during offseason/preseason.
+- Add an embedded `2025` bracket fallback so the app still loads data when
+  ESPN returns no tournament entries.
 
 ## [0.0.19] - 2025-07-30
 

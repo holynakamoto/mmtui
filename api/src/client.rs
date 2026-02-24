@@ -14,6 +14,8 @@ const ESPN_SITE_V2: &str =
     "https://site.api.espn.com/apis/site/v2/sports/basketball/mens-college-basketball";
 const ESPN_V2: &str =
     "https://site.api.espn.com/apis/v2/sports/basketball/mens-college-basketball";
+const FALLBACK_BRACKET_YEAR: i32 = 2025;
+const FALLBACK_BRACKET_JSON: &str = include_str!("../../2025_bracket.json");
 
 /// NCAA API client backed by ESPN's public endpoints.
 #[derive(Debug, Clone)]
@@ -90,6 +92,10 @@ impl NcaaApi {
                 },
                 Err(e) => last_error = Some(e),
             }
+        }
+
+        if let Ok(tournament) = load_embedded_fallback_tournament() {
+            return Ok(tournament);
         }
 
         Err(last_error.unwrap_or_else(|| {
@@ -179,6 +185,13 @@ fn candidate_tournament_years(now: DateTime<Utc>) -> Vec<i32> {
     years
 }
 
+fn load_embedded_fallback_tournament() -> ApiResult<Tournament> {
+    let raw: TournamentsResponse = serde_json::from_str(FALLBACK_BRACKET_JSON)
+        .map_err(|e| ApiError::NotFound(format!("invalid embedded fallback bracket json: {e}")))?;
+    let entry = select_tournament_entry(raw.tournaments.unwrap_or_default(), FALLBACK_BRACKET_YEAR)?;
+    Ok(map_tournament(entry, FALLBACK_BRACKET_YEAR as u16))
+}
+
 fn select_tournament_entry(
     mut entries: Vec<crate::espn::TournamentEntry>,
     year: i32,
@@ -249,6 +262,13 @@ mod tests {
     fn candidate_years_always_include_2025_snapshot_fallback() {
         let dt = Utc.with_ymd_and_hms(2027, 2, 24, 12, 0, 0).unwrap();
         assert!(candidate_tournament_years(dt).contains(&2025));
+    }
+
+    #[test]
+    fn embedded_fallback_tournament_parses() {
+        let t = load_embedded_fallback_tournament().expect("fallback bracket should parse");
+        assert_eq!(t.year, 2025);
+        assert!(!t.regions.is_empty());
     }
 }
 

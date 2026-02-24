@@ -1,6 +1,6 @@
 [package]
 name = "mmtui"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Andrew Schneider <andjschneider@gmail.com>"]
 edition = "2024"
 license = "MIT"
@@ -25,7 +25,7 @@ better-panic = "0.3.0"
 chrono = "0.4.43"
 crossterm = "0.29.0"
 log = "0.4.29"
-ncaa-api = { path = "api", version = "0.1.1" }
+ncaa-api = { path = "api", version = "0.1.2" }
 serde = { version = "1.0.228", features = ["derive"] }
 tokio = { version = "1.49.0", features = ["full"] }
 tui = { package = "ratatui", version = "0.30.0", features = ["unstable-rendered-line-info"] }
