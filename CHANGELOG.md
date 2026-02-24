@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ESPN returns no tournament entries.
 - Reduce chat reconnect noise with deduplicated system messages and exponential
   reconnect backoff.
+- Fix chat compose input visibility in small terminals and clarify "`i` to
+  type" guidance in the Chat panel/README.
 
 ## [0.0.19] - 2025-07-30
 

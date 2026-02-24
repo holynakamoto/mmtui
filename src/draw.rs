@@ -626,7 +626,7 @@ fn draw_chat(f: &mut Frame, area: Rect, app: &App) {
     }
 
     let [messages_area, input_area] =
-        Layout::vertical([Constraint::Fill(1), Constraint::Length(2)]).areas(inner);
+        Layout::vertical([Constraint::Fill(1), Constraint::Length(3)]).areas(inner);
 
     let mut lines = Vec::new();
     let status = if app.state.chat.connected { "online" } else { "offline" };
@@ -665,10 +665,19 @@ fn draw_chat(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(Paragraph::new(window), messages_area);
 
     let mode = if app.state.chat.composing { "typing" } else { "idle" };
+    let input_block = default_border(Color::DarkGray).title(format!(" {} ", mode));
+    let input_inner = input_block.inner(input_area);
     let input = if app.state.chat.composing {
-        format!("> {}_", app.state.chat.input)
+        let raw = format!("> {}_", app.state.chat.input);
+        let width = input_inner.width.max(1) as usize;
+        let chars: Vec<char> = raw.chars().collect();
+        if chars.len() > width {
+            chars[chars.len() - width..].iter().collect()
+        } else {
+            raw
+        }
     } else {
-        "Press Enter/i to type. Esc cancel. j/k scroll. Set MMTUI_CHAT_WS for remote relay."
+        "Press i to type. Enter sends. Esc cancels. j/k scroll. Set MMTUI_CHAT_WS for relay."
             .to_string()
     };
     let input_style = if app.state.chat.composing {
@@ -676,8 +685,6 @@ fn draw_chat(f: &mut Frame, area: Rect, app: &App) {
     } else {
         Style::default().fg(Color::DarkGray)
     };
-    let input_block = default_border(Color::DarkGray).title(format!(" {} ", mode));
-    let input_inner = input_block.inner(input_area);
     f.render_widget(input_block, input_area);
     f.render_widget(
         Paragraph::new(input).style(input_style),

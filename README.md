@@ -110,7 +110,7 @@ MMTUI_CHAT_ROOM=your-room MMTUI_CHAT_WS=ws://YOUR_SERVER:8787 mmtui
 - `4`: Chat tab
 - `5`: Pick Wizard tab (2025 template)
 - `6`: Compare tab (leaderboard from picks files/links)
-- Chat controls: `i` or `Enter` to compose, `Enter` to send, `Esc` to cancel
+- Chat controls: `i` to compose, `Enter` to send, `Esc` to cancel
 - Pick Wizard: `1`/`2` pick winner, `j`/`k` next/prev matchup, `s` save picks
 - Compare: `r` reload sources, `j`/`k` scroll leaderboard
 - `?`: Help
