@@ -223,6 +223,23 @@ impl App {
         Ok(())
     }
 
+    pub fn reset_pick_wizard(&mut self) {
+        // Clear in-memory selections and reset wizard progress
+        self.state.pick_wizard.selections.clear();
+        self.state.pick_wizard.completed = false;
+        self.state.pick_wizard.current_index = 0;
+
+        // Attempt to remove saved picks file; ignore error if not present
+        let path = pick_wizard_path(self.state.pick_wizard.year);
+        match std::fs::remove_file(&path) {
+            Ok(_) => self
+                .state
+                .chat
+                .push_system("Picks reset and saved file removed."),
+            Err(_) => self.state.chat.push_system("Picks reset (no saved file found)."),
+        }
+    }
+
     pub fn load_pick_wizard_file(&self) -> Result<BracketPicks, String> {
         let path = pick_wizard_path(self.state.pick_wizard.year);
         let content =

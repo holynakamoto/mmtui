@@ -164,6 +164,8 @@ fn draw_bracket(f: &mut Frame, area: Rect, app: &App) {
 
     let region_label = if app.state.bracket.view_round.is_final_four() {
         "National".to_string()
+    } else if app.state.bracket.view_round == RoundKind::FirstFour {
+        "All Regions".to_string()
     } else {
         tournament
             .regions
@@ -205,6 +207,8 @@ fn draw_bracket(f: &mut Frame, area: Rect, app: &App) {
         draw_championship_view(f, bracket_area, tournament);
     } else if app.state.bracket.view_round.is_final_four() {
         draw_final_four_view(f, bracket_area, tournament, app);
+    } else if app.state.bracket.view_round == RoundKind::FirstFour {
+        draw_first_four_all_view(f, bracket_area, tournament, app);
     } else {
         draw_all_regions_view(f, bracket_area, tournament, app);
     }
@@ -212,6 +216,27 @@ fn draw_bracket(f: &mut Frame, area: Rect, app: &App) {
     if let Some(feed) = live_feed_area {
         draw_live_feed(f, feed, app);
     }
+}
+
+fn draw_first_four_all_view(f: &mut Frame, area: Rect, tournament: &ncaa_api::Tournament, app: &App) {
+    // Collect all First Four games across all regions — pre-Selection Sunday they
+    // all land in section 1; post-Selection Sunday they may be spread across regions.
+    let all_games: Vec<Game> = tournament
+        .regions
+        .iter()
+        .flat_map(|r| {
+            round_games(r.rounds.as_slice(), RoundKind::FirstFour)
+                .unwrap_or(&[])
+                .iter()
+                .cloned()
+        })
+        .collect();
+
+    let block = default_border(Color::DarkGray).title(" First Four — Play-In Games ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    draw_round_compact(f, inner, &all_games, true, app.state.bracket.selected_game);
 }
 
 fn draw_all_regions_view(f: &mut Frame, area: Rect, tournament: &ncaa_api::Tournament, app: &App) {
@@ -820,7 +845,7 @@ fn draw_pick_wizard(f: &mut Frame, area: Rect, app: &App) {
         wizard.selections.len(),
         wizard.games.len()
     )));
-    lines.push(Line::from("Keys: 1=top  2=bottom  j/k=next/prev  s=save  Esc=back"));
+    lines.push(Line::from("Keys: 1=top  2=bottom  j/k=next/prev  s=save  r=reset  Esc=back"));
     lines.push(Line::from(""));
 
     if wizard.completed {

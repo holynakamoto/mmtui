@@ -146,6 +146,7 @@ pub async fn handle_key_bindings(
                 guard.on_error(e);
             }
         }
+        (MenuItem::PickWizard, Char('r'), _) => guard.reset_pick_wizard(),
         (MenuItem::PickWizard, KeyCode::Esc, _) => guard.update_tab(MenuItem::Bracket),
 
         // Compare
