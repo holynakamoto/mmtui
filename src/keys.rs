@@ -76,8 +76,30 @@ pub async fn handle_key_bindings(
         (_, Char('4'), _) => guard.update_tab(MenuItem::Chat),
         (_, Char('5'), _) => guard.update_tab(MenuItem::PickWizard),
         (_, Char('6'), _) => guard.update_tab(MenuItem::Compare),
+        (_, Char('7'), _) => {
+            guard.update_tab(MenuItem::PrizePool);
+            let address = guard.state.prize_pool.address.clone();
+            guard.state.prize_pool.loading = true;
+            drop(guard);
+            let _ = network_requests
+                .send(NetworkRequest::RefreshPrizePoolBalance { address })
+                .await;
+            return;
+        }
         (_, Char('?'), _) => guard.update_tab(MenuItem::Help),
         (MenuItem::Help, KeyCode::Esc, _) => guard.exit_help(),
+
+        // Prize Pool
+        (MenuItem::PrizePool, Char('r'), _) => {
+            let address = guard.state.prize_pool.address.clone();
+            guard.state.prize_pool.loading = true;
+            drop(guard);
+            let _ = network_requests
+                .send(NetworkRequest::RefreshPrizePoolBalance { address })
+                .await;
+            return;
+        }
+        (MenuItem::PrizePool, KeyCode::Esc, _) => guard.update_tab(MenuItem::Bracket),
 
         // Bracket navigation
         (MenuItem::Bracket, Char('l') | KeyCode::Right, _) => {

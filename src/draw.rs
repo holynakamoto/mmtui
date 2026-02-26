@@ -13,13 +13,14 @@ use crate::state::network::{ERROR_CHAR, LoadingState};
 use crate::ui::layout::LayoutAreas;
 use ncaa_api::{Game, GameStatus, Round, RoundKind, TeamSeed};
 
-static TABS: &[&str; 6] = &[
+static TABS: &[&str; 7] = &[
     "Bracket",
     "Scoreboard",
     "Game Detail",
     "Chat",
     "Pick Wizard",
     "Compare",
+    "Prize Pool",
 ];
 
 pub fn draw<B>(terminal: &mut Terminal<B>, app: &mut App, loading: LoadingState)
@@ -53,10 +54,11 @@ where
                 MenuItem::Chat => draw_chat(f, layout.main, app),
                 MenuItem::PickWizard => draw_pick_wizard(f, layout.main, app),
                 MenuItem::Compare => draw_compare(f, layout.main, app),
+                MenuItem::PrizePool => draw_prize_pool(f, layout.main, app),
                 MenuItem::Help => draw_placeholder(
                     f,
                     layout.main,
-                    "Help: q=quit  1=Bracket 2=Scoreboard 3=GameDetail 4=Chat 5=Wizard 6=Compare  ←/→=round ↑/↓=game Enter=select r=region",
+                    "Help: q=quit  1=Bracket 2=Scoreboard 3=GameDetail 4=Chat 5=Wizard 6=Compare 7=PrizePool  ←/→=round ↑/↓=game Enter=select r=region",
                 ),
             }
 
@@ -113,6 +115,7 @@ fn draw_tabs(f: &mut Frame, tab_bar: [Rect; 2], app: &App) {
         MenuItem::Chat => 3,
         MenuItem::PickWizard => 4,
         MenuItem::Compare => 5,
+        MenuItem::PrizePool => 6,
         MenuItem::Help => 0,
     };
 
@@ -954,6 +957,45 @@ fn draw_compare(f: &mut Frame, area: Rect, app: &App) {
             Style::default().fg(Color::DarkGray),
         )));
     }
+
+    f.render_widget(Paragraph::new(lines), inner);
+}
+
+fn draw_prize_pool(f: &mut Frame, area: Rect, app: &App) {
+    let block = default_border(Color::White).title(" Prize Pool ");
+    let inner = block.inner(area);
+    f.render_widget(block, area);
+
+    let state = &app.state.prize_pool;
+    let mut lines = Vec::new();
+
+    lines.push(Line::from(vec![
+        Span::styled("Status: ", Style::default().fg(Color::Gray)),
+        if state.loading {
+            Span::styled("Loading...", Style::default().fg(Color::Yellow))
+        } else {
+            Span::styled("Online", Style::default().fg(Color::Green))
+        },
+    ]));
+    lines.push(Line::from(""));
+
+    lines.push(Line::from(vec![
+        Span::styled("Multisig Address: ", Style::default().fg(Color::Gray)),
+        Span::styled(&state.address, Style::default().fg(Color::White)),
+    ]));
+    lines.push(Line::from(vec![
+        Span::styled("Balance: ", Style::default().fg(Color::Gray)),
+        Span::styled(format!("{:.8} BTC", state.balance_btc()), Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+    ]));
+    lines.push(Line::from(""));
+
+    lines.push(Line::from(Span::styled("Custodians (2-of-3 Multisig):", Style::default().fg(Color::Gray))));
+    for custodian in &state.custodians {
+        lines.push(Line::from(format!(" • {}", custodian)));
+    }
+
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled("Keys: r=refresh balance", Style::default().fg(Color::DarkGray))));
 
     f.render_widget(Paragraph::new(lines), inner);
 }

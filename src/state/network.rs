@@ -48,6 +48,9 @@ impl NetworkWorker {
             let result = match request {
                 NetworkRequest::LoadBracket => self.handle_load_bracket().await,
                 NetworkRequest::RefreshScores => self.handle_refresh_scores().await,
+                NetworkRequest::RefreshPrizePoolBalance { address } => {
+                    self.handle_refresh_prize_pool_balance(address).await
+                }
                 NetworkRequest::LoadGameDetail { bracket_id, espn_id } => {
                     self.handle_load_game_detail(bracket_id, espn_id).await
                 }
@@ -77,6 +80,31 @@ impl NetworkWorker {
         debug!("refreshing scores");
         let games = self.client.fetch_scoreboard().await?;
         Ok(NetworkResponse::BracketUpdated { games })
+    }
+
+    async fn handle_refresh_prize_pool_balance(&self, address: String) -> Result<NetworkResponse, ncaa_api::client::ApiError> {
+        debug!("refreshing prize pool balance for {address}");
+        let url = format!("https://mempool.space/api/address/{address}");
+        
+        #[derive(serde::Deserialize)]
+        struct MempoolAddress {
+            chain_stats: MempoolStats,
+        }
+        #[derive(serde::Deserialize)]
+        struct MempoolStats {
+            funded_txo_sum: u64,
+            spent_txo_sum: u64,
+        }
+
+        let resp: MempoolAddress = reqwest::get(url)
+            .await
+            .map_err(|e| ncaa_api::client::ApiError::Other(e.to_string()))?
+            .json()
+            .await
+            .map_err(|e| ncaa_api::client::ApiError::Other(e.to_string()))?;
+
+        let balance_sat = resp.chain_stats.funded_txo_sum.saturating_sub(resp.chain_stats.spent_txo_sum);
+        Ok(NetworkResponse::PrizePoolBalanceUpdated { balance_sat })
     }
 
     async fn handle_load_game_detail(

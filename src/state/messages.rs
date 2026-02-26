@@ -6,6 +6,9 @@ use ncaa_api::{Game, GameDetail, Tournament};
 pub enum NetworkRequest {
     LoadBracket,
     RefreshScores,
+    RefreshPrizePoolBalance {
+        address: String,
+    },
     LoadGameDetail {
         bracket_id: String,
         /// ESPN event ID used to call fetch_game_detail. None pre-Selection Sunday
@@ -21,6 +24,7 @@ pub enum NetworkResponse {
     /// Partial update: only changed Game objects, merged into the bracket tree.
     BracketUpdated { games: Vec<Game> },
     GameDetailLoaded { detail: GameDetail },
+    PrizePoolBalanceUpdated { balance_sat: u64 },
     Error { message: String },
 }
 

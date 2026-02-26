@@ -44,6 +44,7 @@ pub enum ApiError {
     Api(reqwest::Error, String),
     Parsing(reqwest::Error, String),
     NotFound(String),
+    Other(String),
 }
 
 impl fmt::Display for ApiError {
@@ -53,6 +54,7 @@ impl fmt::Display for ApiError {
             ApiError::Api(e, url) => write!(f, "API error for {url}: {e}"),
             ApiError::Parsing(e, url) => write!(f, "Parse error for {url}: {e}"),
             ApiError::NotFound(msg) => write!(f, "Not found: {msg}"),
+            ApiError::Other(msg) => write!(f, "Error: {msg}"),
         }
     }
 }

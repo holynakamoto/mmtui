@@ -1,10 +1,16 @@
 use crate::state::app_settings::AppSettings;
 use crate::state::app_state::{AppState, BracketPicks, ChatMessage, CompareRow};
 use crate::state::chat::ChatWireMessage;
+use bitcoin::address::Address;
+use bitcoin::key::PublicKey;
+use bitcoin::script::Builder;
+use bitcoin::opcodes;
+use bitcoin::Network;
 use chrono::Local;
 use ncaa_api::{Game, GameDetail, GameStatus, RoundKind, Tournament};
 use std::collections::HashSet;
 use std::path::PathBuf;
+use std::str::FromStr;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum MenuItem {
@@ -15,6 +21,7 @@ pub enum MenuItem {
     Chat,
     PickWizard,
     Compare,
+    PrizePool,
     Help,
 }
 
@@ -27,7 +34,7 @@ impl App {
     pub fn new() -> Self {
         let settings = AppSettings::load();
 
-        let app = Self {
+        let mut app = Self {
             state: AppState::new(),
             settings,
         };
@@ -37,6 +44,7 @@ impl App {
             tui_logger::set_default_level(level);
         }
 
+        app.setup_prize_pool();
         app
     }
 
@@ -64,6 +72,11 @@ impl App {
         if game_changed {
             self.state.game_detail.scroll_offset = 0;
         }
+    }
+
+    pub fn on_prize_pool_balance_updated(&mut self, balance_sat: u64) {
+        self.state.prize_pool.balance_sat = balance_sat;
+        self.state.prize_pool.loading = false;
     }
 
     // -----------------------------------------------------------------------
@@ -179,6 +192,49 @@ impl App {
             timestamp: msg.timestamp,
             is_system: false,
         });
+    }
+
+    pub fn setup_prize_pool(&mut self) {
+        // Default placeholders or load from environment
+        let keys_raw = std::env::var("MMTUI_PRIZE_POOL_KEYS").unwrap_or_else(|_| {
+            [
+                "022222222222222222222222222222222222222222222222222222222222222222",
+                "023333333333333333333333333333333333333333333333333333333333333333",
+                "024444444444444444444444444444444444444444444444444444444444444444",
+            ]
+            .join(",")
+        });
+
+        let pks: Vec<&str> = keys_raw.split(',').map(|s| s.trim()).collect();
+        if pks.len() < 2 {
+            self.state.last_error = Some("Prize Pool: At least 2 keys required for multisig".to_string());
+            return;
+        }
+
+        let keys: Vec<_> = pks
+            .iter()
+            .filter_map(|&s| PublicKey::from_str(s).ok())
+            .collect();
+
+        if keys.is_empty() {
+            return;
+        }
+
+        let threshold = (keys.len() / 2 + 1).max(2);
+        let mut builder = Builder::new().push_int(threshold as i64);
+        for key in &keys {
+            builder = builder.push_key(key);
+        }
+        builder = builder
+            .push_int(keys.len() as i64)
+            .push_opcode(opcodes::all::OP_CHECKMULTISIG);
+            
+        let script = builder.into_script();
+        let address = Address::p2wsh(&script, Network::Bitcoin);
+
+        self.state.prize_pool.address = address.to_string();
+        self.state.prize_pool.custodians = keys.iter().map(|k| k.to_string()[..10].to_string() + "...").collect();
+        self.state.prize_pool.threshold = threshold;
     }
 
     pub fn start_pick_wizard(&mut self) {

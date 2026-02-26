@@ -258,6 +258,10 @@ async fn handle_network_response(
             let mut guard = app.lock().await;
             guard.on_game_detail_loaded(detail);
         }
+        NetworkResponse::PrizePoolBalanceUpdated { balance_sat } => {
+            let mut guard = app.lock().await;
+            guard.on_prize_pool_balance_updated(balance_sat);
+        }
         NetworkResponse::Error { message } => {
             error!("Network error: {message}");
             let mut guard = app.lock().await;

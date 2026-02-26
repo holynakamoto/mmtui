@@ -555,6 +555,25 @@ pub struct CompareState {
 }
 
 // ---------------------------------------------------------------------------
+// Prize Pool state
+// ---------------------------------------------------------------------------
+
+#[derive(Debug, Default)]
+pub struct PrizePoolState {
+    pub address: String,
+    pub balance_sat: u64,
+    pub custodians: Vec<String>,
+    pub threshold: usize,
+    pub loading: bool,
+}
+
+impl PrizePoolState {
+    pub fn balance_btc(&self) -> f64 {
+        self.balance_sat as f64 / 100_000_000.0
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Root app state
 // ---------------------------------------------------------------------------
 
@@ -571,6 +590,7 @@ pub struct AppState {
     pub chat: ChatState,
     pub pick_wizard: PickWizardState,
     pub compare: CompareState,
+    pub prize_pool: PrizePoolState,
     pub animation: AnimationState,
 }
 
