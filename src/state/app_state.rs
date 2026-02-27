@@ -1,4 +1,5 @@
 use crate::app::MenuItem;
+use crate::state::custodian::{CustodianEntry, CustodianWizardState};
 use chrono::Local;
 use ncaa_api::{GameDetail, RoundKind, TeamSeed, Tournament};
 use serde::{Deserialize, Serialize};
@@ -562,7 +563,7 @@ pub struct CompareState {
 pub struct PrizePoolState {
     pub address: String,
     pub balance_sat: u64,
-    pub custodians: Vec<String>,
+    pub custodians: Vec<CustodianEntry>,
     pub threshold: usize,
     pub loading: bool,
 }
@@ -591,6 +592,7 @@ pub struct AppState {
     pub pick_wizard: PickWizardState,
     pub compare: CompareState,
     pub prize_pool: PrizePoolState,
+    pub custodian_wizard: CustodianWizardState,
     pub animation: AnimationState,
 }
 
