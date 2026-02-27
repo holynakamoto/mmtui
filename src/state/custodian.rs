@@ -177,6 +177,22 @@ impl CustodianWizardState {
             "Need at least 2"
         }
     }
+
+    /// Transition: Review → EnterLabel. Clears input buffers and error.
+    pub fn begin_add(&mut self) {
+        self.input.clear();
+        self.label_buf.clear();
+        self.error = None;
+        self.step = WizardStep::EnterLabel;
+    }
+
+    /// Transition: EnterLabel → EnterPubkey. Saves the label and clears input.
+    pub fn advance_to_pubkey(&mut self) {
+        self.label_buf = self.input.trim().to_string();
+        self.input.clear();
+        self.error = None;
+        self.step = WizardStep::EnterPubkey;
+    }
 }
 
 // ---------------------------------------------------------------------------
