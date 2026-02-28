@@ -27,6 +27,92 @@ pub async fn handle_key_bindings(
         return;
     }
 
+    // Custodian wizard intercepts all keys when active
+    if guard.state.custodian_wizard.active {
+        use crate::state::custodian::WizardStep;
+        let wiz = &mut guard.state.custodian_wizard;
+
+        match wiz.step.clone() {
+            WizardStep::Review => match key_event.code {
+                Char('a') => wiz.begin_add(),
+                Char('d') => wiz.delete_selected(),
+                KeyCode::Down | Char('j') => wiz.cursor_down(),
+                KeyCode::Up | Char('k') => wiz.cursor_up(),
+                KeyCode::Enter => {
+                    let can = wiz.can_finalize();
+                    let _ = wiz;
+                    if can {
+                        guard.finalize_custodian_wizard();
+                    }
+                }
+                KeyCode::Esc => {
+                    if wiz.dirty {
+                        wiz.step = WizardStep::ConfirmDiscard;
+                    } else {
+                        wiz.discard();
+                    }
+                }
+                _ => {}
+            },
+
+            WizardStep::EnterLabel => match key_event.code {
+                KeyCode::Enter => {
+                    let trimmed = wiz.input.trim().to_string();
+                    if !trimmed.is_empty() {
+                        wiz.advance_to_pubkey();
+                    }
+                }
+                KeyCode::Esc => {
+                    wiz.input.clear();
+                    wiz.error = None;
+                    wiz.step = WizardStep::Review;
+                }
+                KeyCode::Backspace => {
+                    wiz.input.pop();
+                }
+                Char(ch)
+                    if key_event.modifiers == KeyModifiers::NONE
+                        || key_event.modifiers == KeyModifiers::SHIFT =>
+                {
+                    wiz.input.push(ch);
+                }
+                _ => {}
+            },
+
+            WizardStep::EnterPubkey => match key_event.code {
+                KeyCode::Enter => {
+                    let _ = wiz.commit_pubkey();
+                }
+                KeyCode::Esc => {
+                    wiz.input.clear();
+                    wiz.label_buf.clear();
+                    wiz.error = None;
+                    wiz.step = WizardStep::Review;
+                }
+                KeyCode::Backspace => {
+                    wiz.input.pop();
+                    wiz.error = None;
+                }
+                Char(ch)
+                    if key_event.modifiers == KeyModifiers::NONE
+                        || key_event.modifiers == KeyModifiers::SHIFT =>
+                {
+                    wiz.input.push(ch);
+                    wiz.error = None;
+                }
+                _ => {}
+            },
+
+            WizardStep::ConfirmDiscard => match key_event.code {
+                KeyCode::Esc => wiz.discard(),
+                _ => {
+                    wiz.step = WizardStep::Review;
+                }
+            },
+        }
+        return;
+    }
+
     if guard.state.active_tab == MenuItem::Chat && guard.state.chat.composing {
         match (key_event.code, key_event.modifiers) {
             (Char('c'), KeyModifiers::CONTROL) => {
@@ -99,6 +185,7 @@ pub async fn handle_key_bindings(
                 .await;
             return;
         }
+        (MenuItem::PrizePool, Char('e'), _) => guard.open_custodian_wizard(),
         (MenuItem::PrizePool, KeyCode::Esc, _) => guard.update_tab(MenuItem::Bracket),
 
         // Bracket navigation
