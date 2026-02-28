@@ -9,6 +9,7 @@ use crate::app::{App, MenuItem};
 use crate::components::banner::AnimatedBanner;
 use crate::components::banner_frames::BannerTheme;
 use crate::components::bracket::FinalFourView;
+use crate::state::custodian::CustodianEntry;
 use crate::state::network::{ERROR_CHAR, LoadingState};
 use crate::ui::layout::LayoutAreas;
 use ncaa_api::{Game, GameStatus, Round, RoundKind, TeamSeed};
@@ -989,13 +990,21 @@ fn draw_prize_pool(f: &mut Frame, area: Rect, app: &App) {
     ]));
     lines.push(Line::from(""));
 
-    lines.push(Line::from(Span::styled("Custodians (2-of-3 Multisig):", Style::default().fg(Color::Gray))));
-    for custodian in &state.custodians {
-        lines.push(Line::from(format!(" • {}", custodian)));
+    let n = state.custodians.len();
+    let t = state.threshold;
+    lines.push(Line::from(Span::styled(
+        format!("Custodians ({}-of-{} Multisig):", t, n),
+        Style::default().fg(Color::Gray),
+    )));
+    for entry in &state.custodians {
+        lines.push(Line::from(format!(" • {}   {}", entry.label, entry.display_pubkey())));
     }
 
     lines.push(Line::from(""));
-    lines.push(Line::from(Span::styled("Keys: r=refresh balance", Style::default().fg(Color::DarkGray))));
+    lines.push(Line::from(Span::styled(
+        "r=refresh balance  e=edit custodians",
+        Style::default().fg(Color::DarkGray),
+    )));
 
     f.render_widget(Paragraph::new(lines), inner);
 }
