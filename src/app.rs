@@ -1,6 +1,10 @@
 use crate::state::app_settings::AppSettings;
 use crate::state::app_state::{AppState, BracketPicks, ChatMessage, CompareRow};
 use crate::state::chat::ChatWireMessage;
+use crate::state::custodian::{
+    CustodianConfig, CustodianEntry, CustodianWizardState,
+    bip67_sort, compute_threshold, custodian_config_path,
+};
 use bitcoin::address::Address;
 use bitcoin::key::PublicKey;
 use bitcoin::script::Builder;
@@ -195,32 +199,57 @@ impl App {
     }
 
     pub fn setup_prize_pool(&mut self) {
-        // Default placeholders or load from environment
-        let keys_raw = std::env::var("MMTUI_PRIZE_POOL_KEYS").unwrap_or_else(|_| {
-            [
-                "022222222222222222222222222222222222222222222222222222222222222222",
-                "023333333333333333333333333333333333333333333333333333333333333333",
-                "024444444444444444444444444444444444444444444444444444444444444444",
-            ]
-            .join(",")
-        });
+        let entries = self.load_custodian_entries();
+        self.apply_custodian_entries(entries);
+    }
 
-        let pks: Vec<&str> = keys_raw.split(',').map(|s| s.trim()).collect();
-        if pks.len() < 2 {
-            self.state.last_error = Some("Prize Pool: At least 2 keys required for multisig".to_string());
-            return;
+    /// Load custodian entries: file → env var → fake placeholders.
+    fn load_custodian_entries(&self) -> Vec<CustodianEntry> {
+        // 1. Try custodians.json
+        let path = custodian_config_path();
+        if let Ok(config) = CustodianConfig::load_from_path(&path) {
+            if config.custodians.len() >= 2 {
+                return config.custodians;
+            }
         }
 
-        let keys: Vec<_> = pks
+        // 2. Try env var
+        if let Ok(keys_raw) = std::env::var("MMTUI_PRIZE_POOL_KEYS") {
+            let entries: Vec<CustodianEntry> = keys_raw
+                .split(',')
+                .enumerate()
+                .filter_map(|(i, s)| {
+                    CustodianEntry::new(&format!("Custodian {}", i + 1), s.trim()).ok()
+                })
+                .collect();
+            if entries.len() >= 2 {
+                return entries;
+            }
+        }
+
+        // 3. Fake placeholders — valid secp256k1 generator multiples so address still generates
+        vec![
+            CustodianEntry { label: "Custodian A (placeholder)".to_string(), pubkey: "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798".to_string() },
+            CustodianEntry { label: "Custodian B (placeholder)".to_string(), pubkey: "02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5".to_string() },
+            CustodianEntry { label: "Custodian C (placeholder)".to_string(), pubkey: "02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9".to_string() },
+        ]
+    }
+
+    /// Build multisig script and address from entries, update prize_pool state.
+    pub fn apply_custodian_entries(&mut self, mut entries: Vec<CustodianEntry>) {
+        bip67_sort(&mut entries);
+
+        let keys: Vec<_> = entries
             .iter()
-            .filter_map(|&s| PublicKey::from_str(s).ok())
+            .filter_map(|e| PublicKey::from_str(&e.pubkey).ok())
             .collect();
 
-        if keys.is_empty() {
+        if keys.len() < 2 {
+            self.state.last_error = Some("Prize Pool: need at least 2 valid keys".to_string());
             return;
         }
 
-        let threshold = (keys.len() / 2 + 1).max(2);
+        let threshold = compute_threshold(keys.len());
         let mut builder = Builder::new().push_int(threshold as i64);
         for key in &keys {
             builder = builder.push_key(key);
@@ -228,13 +257,30 @@ impl App {
         builder = builder
             .push_int(keys.len() as i64)
             .push_opcode(opcodes::all::OP_CHECKMULTISIG);
-            
+
         let script = builder.into_script();
         let address = Address::p2wsh(&script, Network::Bitcoin);
 
         self.state.prize_pool.address = address.to_string();
-        self.state.prize_pool.custodians = keys.iter().map(|k| k.to_string()[..10].to_string() + "...").collect();
+        self.state.prize_pool.custodians = entries;
         self.state.prize_pool.threshold = threshold;
+    }
+
+    pub fn open_custodian_wizard(&mut self) {
+        let existing = self.state.prize_pool.custodians.clone();
+        self.state.custodian_wizard = CustodianWizardState::open(existing);
+    }
+
+    pub fn finalize_custodian_wizard(&mut self) {
+        let entries = self.state.custodian_wizard.entries.clone();
+        let config = CustodianConfig { custodians: entries.clone() };
+        let path = custodian_config_path();
+        if let Err(e) = config.save_to_path(&path) {
+            self.state.last_error = Some(format!("Save failed: {e}"));
+            return;
+        }
+        self.apply_custodian_entries(entries);
+        self.state.custodian_wizard.discard();
     }
 
     pub fn start_pick_wizard(&mut self) {
