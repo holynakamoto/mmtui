@@ -62,6 +62,10 @@ where
                 ),
             }
 
+            // Custodian wizard overlay — renders on top of active tab
+            if app.state.custodian_wizard.active {
+                draw_custodian_wizard(f, app);
+            }
             draw_loading_spinner(f, f.area(), app, loading);
         })
         .unwrap();
@@ -1006,4 +1010,223 @@ fn draw_prize_pool(f: &mut Frame, area: Rect, app: &App) {
     )));
 
     f.render_widget(Paragraph::new(lines), inner);
+}
+
+pub fn draw_custodian_wizard(f: &mut Frame, app: &App) {
+    use crate::state::custodian::{WizardStep, compute_threshold};
+
+    let wiz = &app.state.custodian_wizard;
+    if !wiz.active {
+        return;
+    }
+
+    // Center a popup over the terminal area
+    let area = f.area();
+    let w = 74u16.min(area.width.saturating_sub(4));
+    let h = 22u16.min(area.height.saturating_sub(4));
+    let x = (area.width.saturating_sub(w)) / 2;
+    let y = (area.height.saturating_sub(h)) / 2;
+    let popup = Rect { x, y, width: w, height: h };
+
+    f.render_widget(Clear, popup);
+
+    let title = if wiz.step == WizardStep::ConfirmDiscard {
+        " Prize Pool — Unsaved Changes "
+    } else {
+        " Prize Pool — Custodian Setup "
+    };
+    let border_color = if wiz.step == WizardStep::ConfirmDiscard {
+        Color::Red
+    } else {
+        Color::Yellow
+    };
+    let block = default_border(border_color).title(title);
+    let inner = block.inner(popup);
+    f.render_widget(block, popup);
+
+    // Split into left (list) and right (context) columns
+    let cols = Layout::horizontal([
+        Constraint::Percentage(55),
+        Constraint::Percentage(45),
+    ])
+    .split(inner);
+
+    // ── Left: Custodian list ─────────────────────────────────────────────
+    let sep = "─".repeat(cols[0].width as usize);
+    let mut list_lines: Vec<Line> = vec![
+        Line::from(Span::styled(
+            format!(" Custodians ({} added)", wiz.entries.len()),
+            Style::default().fg(Color::Gray),
+        )),
+        Line::from(Span::styled(sep.clone(), Style::default().fg(Color::DarkGray))),
+    ];
+
+    if wiz.entries.is_empty() {
+        list_lines.push(Line::from(Span::styled(
+            " (no custodians yet — press a to add)",
+            Style::default().fg(Color::DarkGray),
+        )));
+    } else {
+        for (i, entry) in wiz.entries.iter().enumerate() {
+            let is_selected = i == wiz.selected && wiz.step == WizardStep::Review;
+            let cursor = if is_selected { "▶ " } else { "  " };
+            let style = if is_selected {
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::White)
+            };
+            list_lines.push(Line::from(Span::styled(
+                format!("{}{}.  {}   {}", cursor, i + 1, entry.label, entry.display_pubkey()),
+                style,
+            )));
+        }
+    }
+
+    list_lines.push(Line::from(""));
+    let hint = match wiz.step {
+        WizardStep::Review => {
+            if wiz.can_finalize() {
+                " a=add  d=del  ↑↓=nav  Enter=save  Esc=cancel"
+            } else {
+                " a=add  d=del  ↑↓=nav  (need ≥2 to save)"
+            }
+        }
+        WizardStep::EnterLabel | WizardStep::EnterPubkey => " Enter=confirm  Esc=back",
+        WizardStep::ConfirmDiscard => " Esc=discard  any key=keep editing",
+    };
+    list_lines.push(Line::from(Span::styled(
+        hint,
+        Style::default().fg(Color::DarkGray),
+    )));
+
+    f.render_widget(Paragraph::new(list_lines), cols[0]);
+
+    // ── Right: Context panel ─────────────────────────────────────────────
+    let sep_r = "─".repeat(cols[1].width as usize);
+    let mut ctx_lines: Vec<Line> = Vec::new();
+
+    match wiz.step {
+        WizardStep::Review => {
+            let n = wiz.entries.len();
+            let threshold = if n >= 2 { compute_threshold(n) } else { 0 };
+            ctx_lines.push(Line::from(Span::styled(
+                " Summary",
+                Style::default().fg(Color::Gray),
+            )));
+            ctx_lines.push(Line::from(Span::styled(sep_r, Style::default().fg(Color::DarkGray))));
+            ctx_lines.push(Line::from(""));
+            ctx_lines.push(Line::from(vec![
+                Span::styled(" Threshold:  ", Style::default().fg(Color::Gray)),
+                Span::styled(
+                    if n >= 2 {
+                        format!("{}-of-{}", threshold, n)
+                    } else {
+                        "—".to_string()
+                    },
+                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                ),
+            ]));
+            ctx_lines.push(Line::from(vec![
+                Span::styled(" Min needed: ", Style::default().fg(Color::Gray)),
+                Span::raw("2  "),
+                if n >= 2 {
+                    Span::styled("✓", Style::default().fg(Color::Green))
+                } else {
+                    Span::styled("✗", Style::default().fg(Color::Red))
+                },
+            ]));
+            ctx_lines.push(Line::from(""));
+            ctx_lines.push(Line::from(vec![
+                Span::styled(" Status:     ", Style::default().fg(Color::Gray)),
+                Span::styled(
+                    wiz.status_text(),
+                    if wiz.can_finalize() {
+                        Style::default().fg(Color::Green)
+                    } else {
+                        Style::default().fg(Color::Yellow)
+                    },
+                ),
+            ]));
+        }
+
+        WizardStep::EnterLabel => {
+            ctx_lines.push(Line::from(Span::styled(
+                " Enter Label",
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            )));
+            ctx_lines.push(Line::from(Span::styled(sep_r, Style::default().fg(Color::DarkGray))));
+            ctx_lines.push(Line::from(""));
+            ctx_lines.push(Line::from(Span::styled(
+                " Name for this custodian:",
+                Style::default().fg(Color::Gray),
+            )));
+            ctx_lines.push(Line::from(""));
+            ctx_lines.push(Line::from(vec![
+                Span::styled(" > ", Style::default().fg(Color::Yellow)),
+                Span::styled(wiz.input.as_str(), Style::default().fg(Color::White)),
+                Span::styled("_", Style::default().fg(Color::Yellow)),
+            ]));
+        }
+
+        WizardStep::EnterPubkey => {
+            ctx_lines.push(Line::from(Span::styled(
+                " Enter Pubkey",
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            )));
+            ctx_lines.push(Line::from(Span::styled(sep_r, Style::default().fg(Color::DarkGray))));
+            ctx_lines.push(Line::from(""));
+            ctx_lines.push(Line::from(Span::styled(
+                format!(" For: {}", wiz.label_buf),
+                Style::default().fg(Color::Gray),
+            )));
+            ctx_lines.push(Line::from(""));
+            ctx_lines.push(Line::from(Span::styled(
+                " 66-char compressed hex (02/03...):",
+                Style::default().fg(Color::DarkGray),
+            )));
+            ctx_lines.push(Line::from(""));
+            // Break long input across two lines so it doesn't overflow
+            let inp = &wiz.input;
+            if inp.len() > 33 {
+                ctx_lines.push(Line::from(Span::styled(
+                    format!(" {}", &inp[..33]),
+                    Style::default().fg(Color::White),
+                )));
+                ctx_lines.push(Line::from(vec![
+                    Span::styled(format!(" {}", &inp[33..]), Style::default().fg(Color::White)),
+                    Span::styled("_", Style::default().fg(Color::Yellow)),
+                ]));
+            } else {
+                ctx_lines.push(Line::from(vec![
+                    Span::styled(format!(" {}", inp), Style::default().fg(Color::White)),
+                    Span::styled("_", Style::default().fg(Color::Yellow)),
+                ]));
+            }
+            if let Some(err) = &wiz.error {
+                ctx_lines.push(Line::from(""));
+                ctx_lines.push(Line::from(Span::styled(
+                    format!(" ⚠ {}", err),
+                    Style::default().fg(Color::Red),
+                )));
+            }
+        }
+
+        WizardStep::ConfirmDiscard => {
+            ctx_lines.push(Line::from(Span::styled(
+                " Unsaved Changes",
+                Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
+            )));
+            ctx_lines.push(Line::from(""));
+            ctx_lines.push(Line::from(Span::styled(
+                " Press Esc again to discard,",
+                Style::default().fg(Color::Yellow),
+            )));
+            ctx_lines.push(Line::from(Span::styled(
+                " or any other key to keep editing.",
+                Style::default().fg(Color::Yellow),
+            )));
+        }
+    }
+
+    f.render_widget(Paragraph::new(ctx_lines), cols[1]);
 }
