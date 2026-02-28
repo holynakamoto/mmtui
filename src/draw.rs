@@ -1012,7 +1012,7 @@ fn draw_prize_pool(f: &mut Frame, area: Rect, app: &App) {
     f.render_widget(Paragraph::new(lines), inner);
 }
 
-pub fn draw_custodian_wizard(f: &mut Frame, app: &App) {
+fn draw_custodian_wizard(f: &mut Frame, app: &App) {
     use crate::state::custodian::{WizardStep, compute_threshold};
 
     let wiz = &app.state.custodian_wizard;
@@ -1058,7 +1058,7 @@ pub fn draw_custodian_wizard(f: &mut Frame, app: &App) {
             format!(" Custodians ({} added)", wiz.entries.len()),
             Style::default().fg(Color::Gray),
         )),
-        Line::from(Span::styled(sep.clone(), Style::default().fg(Color::DarkGray))),
+        Line::from(Span::styled(sep, Style::default().fg(Color::DarkGray))),
     ];
 
     if wiz.entries.is_empty() {
@@ -1187,13 +1187,17 @@ pub fn draw_custodian_wizard(f: &mut Frame, app: &App) {
             ctx_lines.push(Line::from(""));
             // Break long input across two lines so it doesn't overflow
             let inp = &wiz.input;
-            if inp.len() > 33 {
+            let chars: Vec<char> = inp.chars().collect();
+            const PUBKEY_SPLIT: usize = 33; // half of 66-char compressed pubkey
+            if chars.len() > PUBKEY_SPLIT {
+                let first: String = chars[..PUBKEY_SPLIT].iter().collect();
+                let rest: String = chars[PUBKEY_SPLIT..].iter().collect();
                 ctx_lines.push(Line::from(Span::styled(
-                    format!(" {}", &inp[..33]),
+                    format!(" {}", first),
                     Style::default().fg(Color::White),
                 )));
                 ctx_lines.push(Line::from(vec![
-                    Span::styled(format!(" {}", &inp[33..]), Style::default().fg(Color::White)),
+                    Span::styled(format!(" {}", rest), Style::default().fg(Color::White)),
                     Span::styled("_", Style::default().fg(Color::Yellow)),
                 ]));
             } else {
@@ -1216,6 +1220,7 @@ pub fn draw_custodian_wizard(f: &mut Frame, app: &App) {
                 " Unsaved Changes",
                 Style::default().fg(Color::Red).add_modifier(Modifier::BOLD),
             )));
+            ctx_lines.push(Line::from(Span::styled(sep_r, Style::default().fg(Color::DarkGray))));
             ctx_lines.push(Line::from(""));
             ctx_lines.push(Line::from(Span::styled(
                 " Press Esc again to discard,",

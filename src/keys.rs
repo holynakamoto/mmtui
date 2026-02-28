@@ -93,8 +93,9 @@ pub async fn handle_key_bindings(
                     wiz.error = None;
                 }
                 Char(ch)
-                    if key_event.modifiers == KeyModifiers::NONE
-                        || key_event.modifiers == KeyModifiers::SHIFT =>
+                    if (key_event.modifiers == KeyModifiers::NONE
+                        || key_event.modifiers == KeyModifiers::SHIFT)
+                        && ch.is_ascii_hexdigit() =>
                 {
                     wiz.input.push(ch);
                     wiz.error = None;
