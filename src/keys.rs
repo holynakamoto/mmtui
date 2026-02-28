@@ -32,15 +32,14 @@ pub async fn handle_key_bindings(
         use crate::state::custodian::WizardStep;
         let wiz = &mut guard.state.custodian_wizard;
 
-        match wiz.step.clone() {
+        match wiz.step {
             WizardStep::Review => match key_event.code {
                 Char('a') => wiz.begin_add(),
                 Char('d') => wiz.delete_selected(),
                 KeyCode::Down | Char('j') => wiz.cursor_down(),
                 KeyCode::Up | Char('k') => wiz.cursor_up(),
                 KeyCode::Enter => {
-                    let can = wiz.can_finalize();
-                    let _ = wiz;
+                    let can = guard.state.custodian_wizard.can_finalize();
                     if can {
                         guard.finalize_custodian_wizard();
                     }
@@ -105,6 +104,7 @@ pub async fn handle_key_bindings(
 
             WizardStep::ConfirmDiscard => match key_event.code {
                 KeyCode::Esc => wiz.discard(),
+                // Any key other than Esc dismisses the confirm dialog and returns to Review
                 _ => {
                     wiz.step = WizardStep::Review;
                 }

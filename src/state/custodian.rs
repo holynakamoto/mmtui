@@ -85,7 +85,7 @@ pub fn compute_threshold(n: usize) -> usize {
 // WizardStep
 // ---------------------------------------------------------------------------
 
-#[derive(Debug, Default, PartialEq, Clone)]
+#[derive(Debug, Default, PartialEq, Clone, Copy)]
 pub enum WizardStep {
     #[default]
     Review,
