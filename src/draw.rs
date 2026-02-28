@@ -9,7 +9,6 @@ use crate::app::{App, MenuItem};
 use crate::components::banner::AnimatedBanner;
 use crate::components::banner_frames::BannerTheme;
 use crate::components::bracket::FinalFourView;
-use crate::state::custodian::CustodianEntry;
 use crate::state::network::{ERROR_CHAR, LoadingState};
 use crate::ui::layout::LayoutAreas;
 use ncaa_api::{Game, GameStatus, Round, RoundKind, TeamSeed};

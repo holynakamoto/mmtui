@@ -22,7 +22,7 @@ impl CustodianEntry {
         })?;
         Ok(Self {
             label: label.to_string(),
-            pubkey: pubkey.to_string(),
+            pubkey: pubkey.to_lowercase(),
         })
     }
 
